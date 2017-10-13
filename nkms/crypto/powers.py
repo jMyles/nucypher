@@ -1,10 +1,8 @@
-from random import SystemRandom
-from typing import Iterable, Union, List, Tuple
-
-from py_ecc.secp256k1 import N, privtopub
+from typing import Iterable, List, Tuple
 
 from nkms.crypto import api
 from nkms.keystore import keypairs
+from nkms.keystore.keypairs import EncryptingKeypair
 from npre import umbral
 
 
@@ -97,16 +95,9 @@ class CryptoPowerUp(object):
 class SigningKeypair(CryptoPowerUp):
     confers_public_key = True
 
-    def __init__(self, privkey_bytes=None):
-        self.secure_rand = SystemRandom()
-        if privkey_bytes:
-            self.priv_key = privkey_bytes
-        else:
-            # Key generation is random([1, N - 1])
-            priv_number = self.secure_rand.randrange(1, N)
-            self.priv_key = priv_number.to_bytes(32, byteorder='big')
-        # Get the public component
-        self.pub_key = privtopub(self.priv_key)
+    def __init__(self, keypair=None):  # TODO: Pretty much move this __init__ to SigningPower
+        # TODO: Do something with keypair.
+        self.priv_key, self.pub_key = api.generate_random_keypair()
 
     def pubkey_bytes(self):
         return b''.join(i.to_bytes(32, 'big') for i in self.pub_key)
@@ -132,13 +123,14 @@ class SigningKeypair(CryptoPowerUp):
 class EncryptingPower(CryptoPowerUp):
     KEYSIZE = 32
 
-    def __init__(self, keypair: keypairs.EncryptingKeypair):
+    def __init__(self, keypair: keypairs.EncryptingKeypair=None):
         """
         Initalizes an EncryptingPower object for CryptoPower.
         """
-        self.keypair = keypair
-        self.priv_key = keypair.privkey
-        self.pub_key = keypair.pubkey
+
+        self.keypair = keypair  or EncryptingKeypair()
+        self.priv_key = self.keypair.privkey
+        self.pub_key = self.keypair.pubkey
 
     def _split_path(self, path: bytes) -> List[bytes]:
         """
@@ -156,8 +148,8 @@ class EncryptingPower(CryptoPowerUp):
         return [b'/'.join(dirs[:i + 1]) for i in range(len(dirs))]
 
     def _derive_path_key(
-        self,
-        path: bytes,
+            self,
+            path: bytes,
     ) -> bytes:
         """
         Derives a key for the specific path.
@@ -171,9 +163,9 @@ class EncryptingPower(CryptoPowerUp):
         return (priv_key, pub_key)
 
     def _encrypt_key(
-        self,
-        data_key: bytes,
-        path_key: bytes,
+            self,
+            data_key: bytes,
+            path_key: bytes,
     ) -> bytes:
         """
         Encrypts the data key with the path keys provided.
@@ -188,10 +180,10 @@ class EncryptingPower(CryptoPowerUp):
         return (enc_key_data, enc_key_path)
 
     def _decrypt_key(
-        self,
-        enc_data_key: bytes,
-        enc_path_key: bytes,
-        priv_key: bytes
+            self,
+            enc_data_key: bytes,
+            enc_path_key: bytes,
+            priv_key: bytes
     ) -> bytes:
         """
         Decrypts the enc_data_key via ECIES decapsulation.
@@ -208,12 +200,12 @@ class EncryptingPower(CryptoPowerUp):
         return api.symm_decrypt(dec_symm_key, enc_data_key)
 
     def encrypt(
-        self,
-        data: bytes,
-        recp_keypair: keypairs.EncryptingKeypair,
-        M: int,
-        N: int,
-        path: bytes = None
+            self,
+            data: bytes,
+            recp_keypair: keypairs.EncryptingKeypair,
+            M: int,
+            N: int,
+            path: bytes = None
     ) -> Tuple[Tuple[bytes, bytes, bytes], bytes, List[umbral.RekeyFrag]]:
         """
         Encrypts data using ECIES.
@@ -255,10 +247,10 @@ class EncryptingPower(CryptoPowerUp):
         )
 
     def decrypt(
-        self,
-        enc_data: bytes,
-        enc_eph_key: bytes,
-        key_frags: List[umbral.EncryptedKey]
+            self,
+            enc_data: bytes,
+            enc_eph_key: bytes,
+            key_frags: List[umbral.EncryptedKey]
     ) -> bytes:
         """
         Decrypts data using the ECIES scheme.
