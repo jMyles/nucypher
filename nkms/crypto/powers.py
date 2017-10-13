@@ -3,7 +3,7 @@ from typing import Iterable, Union, List, Tuple
 
 from py_ecc.secp256k1 import N, privtopub
 
-from nkms.crypto import API as API
+from nkms.crypto import api
 from nkms.keystore import keypairs
 from npre import umbral
 
@@ -72,13 +72,16 @@ class CryptoPower(object):
             sig_keypair = self._power_ups[SigningKeypair]
         except KeyError:
             raise NoSigningPower
-        msg_digest = b"".join(API.keccak_digest(m) for m in messages)
+        msg_digest = b"".join(api.keccak_digest(m) for m in messages)
 
         return sig_keypair.sign(msg_digest)
 
+    def decrypt(self, ciphertext):
+        return b"This is a wonderful and fancy plaintext."
+
     def encrypt_for(self, pubkey_sign_id, cleartext):
         try:
-            enc_keypair = self._power_ups[EncryptingKeypair]
+            enc_keypair = self._power_ups[EncryptingPower]
             # TODO: Actually encrypt.
         except KeyError:
             raise NoEncryptingPower
@@ -110,7 +113,7 @@ class SigningKeypair(CryptoPowerUp):
 
     def sign(self, msghash):
         """
-        TODO: Use crypto API sign()
+        TODO: Use crypto api sign()
 
         Signs a hashed message and returns a msgpack'ed v, r, and s.
 
@@ -119,8 +122,8 @@ class SigningKeypair(CryptoPowerUp):
         :rtype: Bytestring
         :return: Msgpacked bytestring of v, r, and s (the signature)
         """
-        v, r, s = API.ecdsa_sign(msghash, self.priv_key)
-        return API.ecdsa_gen_sig(v, r, s)
+        v, r, s = api.ecdsa_sign(msghash, self.priv_key)
+        return api.ecdsa_gen_sig(v, r, s)
 
     def public_key(self):
         return self.pub_key
@@ -163,8 +166,8 @@ class EncryptingPower(CryptoPowerUp):
 
         :return: Derived key
         """
-        priv_key = API.keccak_digest(self.priv_key, path)
-        pub_key = API.ecies_priv2pub(priv_key)
+        priv_key = api.keccak_digest(self.priv_key, path)
+        pub_key = api.ecies_priv2pub(priv_key)
         return (priv_key, pub_key)
 
     def _encrypt_key(
@@ -180,8 +183,8 @@ class EncryptingPower(CryptoPowerUp):
 
         :return: List[Tuple[enc_key_data, enc_key_path]]
         """
-        plain_key_data, enc_key_path = API.ecies_encaspulate(path_key)
-        enc_key_data = API.symm_encrypt(plain_key_data, data_key)
+        plain_key_data, enc_key_path = api.ecies_encaspulate(path_key)
+        enc_key_data = api.symm_encrypt(plain_key_data, data_key)
         return (enc_key_data, enc_key_path)
 
     def _decrypt_key(
@@ -201,8 +204,8 @@ class EncryptingPower(CryptoPowerUp):
 
         :return: decrypted key
         """
-        dec_symm_key = API.ecies_decapsulate(priv_key, enc_path_key)
-        return API.symm_decrypt(dec_symm_key, enc_data_key)
+        dec_symm_key = api.ecies_decapsulate(priv_key, enc_path_key)
+        return api.symm_decrypt(dec_symm_key, enc_data_key)
 
     def encrypt(
         self,
@@ -225,8 +228,8 @@ class EncryptingPower(CryptoPowerUp):
         :return: Tuple((enc_data, enc_eph_key), enc_data_key, reenc_frags)
         """
         # Encrypt plaintext data with nacl.SecretBox (symmetric)
-        data_key = API.secure_random(EncryptingPower.KEYSIZE)
-        enc_data = API.symm_encrypt(data_key, data)
+        data_key = api.secure_random(EncryptingPower.KEYSIZE)
+        enc_data = api.symm_encrypt(data_key, data)
 
         # Derive path keys, if path. If not, use our public key
         if path:
@@ -239,8 +242,8 @@ class EncryptingPower(CryptoPowerUp):
         enc_data_key, enc_path_key = self._encrypt_key(data_key, path_pub)
 
         # Generate ephemeral key and create a re-encryption key
-        eph_priv_key = API.ecies.gen_priv()
-        reenc_frags = API.ecies_split_rekey(path_priv, eph_priv_key, M, N)
+        eph_priv_key = api.ecies.gen_priv()
+        reenc_frags = api.ecies_split_rekey(path_priv, eph_priv_key, M, N)
 
         # Encrypt the ephemeral key for Bob
         enc_eph_priv, enc_symm_eph = self._encrypt_key(eph_priv_key,
