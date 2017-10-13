@@ -75,12 +75,17 @@ class CryptoPower(object):
         return sig_keypair.sign(msg_digest)
 
     def decrypt(self, ciphertext):
-        return b"This is a wonderful and fancy plaintext."
+        try:
+            encrypting_power = self._power_ups[EncryptingPower]
+            return encrypting_power.decrypt(ciphertext)
+        except KeyError:
+            raise NoEncryptingPower
 
     def encrypt_for(self, pubkey_sign_id, cleartext):
         try:
-            enc_keypair = self._power_ups[EncryptingPower]
-            # TODO: Actually encrypt.
+            encrypting_power = self._power_ups[EncryptingPower]
+            ciphertext = encrypting_power.encrypt(cleartext, pubkey_sign_id)
+            return ciphertext
         except KeyError:
             raise NoEncryptingPower
 
@@ -203,8 +208,6 @@ class EncryptingPower(CryptoPowerUp):
             self,
             data: bytes,
             recp_keypair: keypairs.EncryptingKeypair,
-            M: int,
-            N: int,
             path: bytes = None
     ) -> Tuple[Tuple[bytes, bytes, bytes], bytes, List[umbral.RekeyFrag]]:
         """
@@ -213,8 +216,6 @@ class EncryptingPower(CryptoPowerUp):
         :param data: Data to encrypt
         :param path: Path to derive pathkey(s) for
         :param recp_keypair: Recipient's EncryptingKeypair
-        :param M: Minimum number of kFrags needed to complete ciphertext
-        :param N: Total number of kFrags to generate.
         :param path: Path of file to generate pathkey(s) for
 
         :return: Tuple((enc_data, enc_eph_key), enc_data_key, reenc_frags)
@@ -246,19 +247,5 @@ class EncryptingPower(CryptoPowerUp):
             (enc_data, enc_eph_priv, enc_symm_eph), enc_data_key, reenc_frags
         )
 
-    def decrypt(
-            self,
-            enc_data: bytes,
-            enc_eph_key: bytes,
-            key_frags: List[umbral.EncryptedKey]
-    ) -> bytes:
-        """
-        Decrypts data using the ECIES scheme.
-
-        :param enc_data: Encrypted data to decrypt
-        :param enc_eph_key: The encrypted ephemeral key
-        :param key_frags: Re-encryption keyfrags to combine.
-
-        :return: Decrypted data
-        """
-        pass
+    def decrypt(self, *args, **kwargs):
+        return self.keypair.decrypt(*args, **kwargs)
