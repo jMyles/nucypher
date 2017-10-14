@@ -63,8 +63,6 @@ class Character(object):
 
         self.seal = Seal()
 
-
-
     def attach_server(self, ksize=20, alpha=3, id=None, storage=None,
                       *args, **kwargs) -> None:
         self._server = self._server_class(ksize, alpha, id, storage, *args, **kwargs)

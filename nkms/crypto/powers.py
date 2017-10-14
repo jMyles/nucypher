@@ -85,7 +85,7 @@ class CryptoPower(object):
     def encrypt_for(self, pubkey, cleartext):
         try:
             encrypting_power = self._power_ups[EncryptingPower]
-            ciphertext = encrypting_power.encrypt(cleartext, pubkey)
+            ciphertext = encrypting_power.encrypt(cleartext, bytes(pubkey))
             return ciphertext
         except KeyError:
             raise NoEncryptingPower
@@ -217,10 +217,10 @@ class EncryptingPower(CryptoPowerUp):
         """
         pubkey = pubkey or self.pub_key
 
-        key, enc_key = API.ecies_encaspulate(pubkey)
-        enc_data = API.symm_encrypt(key, data)
+        key, enc_key = api.ecies_encapsulate(pubkey)
+        enc_data = api.symm_encrypt(key, data)
 
-        return (API.elliptic_curve.serialize(enc_key.ekey), enc_data)
+        return (api.elliptic_curve.serialize(enc_key.ekey), enc_data)
 
     def gen_path_keys(
             self,
