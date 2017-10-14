@@ -1,6 +1,7 @@
 from typing import Iterable, List, Tuple
 
 from nkms.crypto import api
+from nkms.crypto.api import pubkey_tuple_to_bytes
 from nkms.keystore import keypairs
 from nkms.keystore.keypairs import EncryptingKeypair
 from npre import umbral
@@ -81,10 +82,10 @@ class CryptoPower(object):
         except KeyError:
             raise NoEncryptingPower
 
-    def encrypt_for(self, pubkey_sign_id, cleartext):
+    def encrypt_for(self, pubkey, cleartext):
         try:
             encrypting_power = self._power_ups[EncryptingPower]
-            ciphertext = encrypting_power.encrypt(cleartext, pubkey_sign_id)
+            ciphertext = encrypting_power.encrypt(cleartext, pubkey)
             return ciphertext
         except KeyError:
             raise NoEncryptingPower
@@ -103,9 +104,6 @@ class SigningKeypair(CryptoPowerUp):
     def __init__(self, keypair=None):  # TODO: Pretty much move this __init__ to SigningPower
         # TODO: Do something with keypair.
         self.priv_key, self.pub_key = api.generate_random_keypair()
-
-    def pubkey_bytes(self):
-        return b''.join(i.to_bytes(32, 'big') for i in self.pub_key)
 
     def sign(self, msghash):
         """
@@ -180,7 +178,7 @@ class EncryptingPower(CryptoPowerUp):
 
         :return: List[Tuple[enc_key_data, enc_key_path]]
         """
-        plain_key_data, enc_key_path = api.ecies_encaspulate(path_key)
+        plain_key_data, enc_key_path = api.ecies_encapsulate(path_key)
         enc_key_data = api.symm_encrypt(plain_key_data, data_key)
         return (enc_key_data, enc_key_path)
 
@@ -231,11 +229,15 @@ class EncryptingPower(CryptoPowerUp):
             path_priv = self.priv_key
             path_pub = self.pub_key
 
+        # TODO: this probably needs to be handled in a method or something.
+        if type(path_pub) == tuple:
+            path_pub = pubkey_tuple_to_bytes(path_pub)
+
         # Encrypt the data key with the path keys
         enc_data_key, enc_path_key = self._encrypt_key(data_key, path_pub)
 
         # Generate ephemeral key and create a re-encryption key
-        eph_priv_key = api.ecies.gen_priv()
+        eph_priv_key = api.ecies_gen_priv()
         reenc_frags = api.ecies_split_rekey(path_priv, eph_priv_key, M, N)
 
         # Encrypt the ephemeral key for Bob
