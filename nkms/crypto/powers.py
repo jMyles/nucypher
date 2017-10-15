@@ -1,10 +1,9 @@
 from typing import Iterable, List, Tuple
 
 from nkms.crypto import api
-from nkms.crypto.api import pubkey_tuple_to_bytes
+from nkms.crypto._alpha import generate_random_keypair
 from nkms.keystore import keypairs
 from nkms.keystore.keypairs import EncryptingKeypair
-from npre import umbral
 
 
 class PowerUpError(TypeError):
@@ -103,7 +102,7 @@ class SigningKeypair(CryptoPowerUp):
 
     def __init__(self, keypair=None):  # TODO: Pretty much move this __init__ to SigningPower
         # TODO: Do something with keypair.
-        self.priv_key, self.pub_key = api.generate_random_keypair()
+        self.priv_key, self.pub_key = generate_random_keypair()
 
     def sign(self, msghash):
         """
@@ -126,12 +125,12 @@ class SigningKeypair(CryptoPowerUp):
 class EncryptingPower(CryptoPowerUp):
     KEYSIZE = 32
 
-    def __init__(self, keypair: keypairs.EncryptingKeypair=None):
+    def __init__(self, keypair: keypairs.EncryptingKeypair = None):
         """
         Initalizes an EncryptingPower object for CryptoPower.
         """
 
-        self.keypair = keypair  or EncryptingKeypair()
+        self.keypair = keypair or EncryptingKeypair()
         self.priv_key = self.keypair.privkey
         self.pub_key = self.keypair.pubkey
 
