@@ -6,7 +6,7 @@ from py_ecc.secp256k1 import N, privtopub
 from nkms.crypto import api as API
 from nkms.crypto._alpha import generate_random_keypair
 from nkms.keystore import keypairs
-from nkms.keystore.keypairs import EncryptingKeypair
+from nkms.keystore.keypairs import SigningKeypair as RealSigingKeypair, EncryptingKeypair
 
 
 class PowerUpError(TypeError):
@@ -102,8 +102,11 @@ class SigningKeypair(CryptoPowerUp):
     confers_public_key = True
 
     def __init__(self, keypair=None):  # TODO: Pretty much move this __init__ to SigningPower
-        # TODO: Do something with keypair.
-        self.priv_key, self.pub_key = generate_random_keypair()
+
+        self.real_keypair = keypair or RealSigingKeypair()  # Total throwaway line - this will not be "real_keypair" because this will be in SigningPower
+        self.real_keypair.gen_privkey()
+
+        self.priv_key, self.pub_key = self.real_keypair.privkey, self.real_keypair.pubkey
 
     def pubkey_bytes(self):
         return b''.join(i.to_bytes(32, 'big') for i in self.pub_key)
