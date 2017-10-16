@@ -48,14 +48,14 @@ class CryptoPower(object):
     def pubkey_sig_bytes(self):
         try:
             return self._power_ups[
-                SigningKeypair].pubkey_bytes()  # TODO: Turn this into an ID lookup on a KeyStore.
+                SigningKeypair].pub_key  # TODO: Turn this into an ID lookup on a KeyStore.
         except KeyError:
             raise NoSigningPower
 
     def pubkey_sig_tuple(self):
         try:
-            return self._power_ups[
-                SigningKeypair].pub_key  # TODO: Turn this into an ID lookup on a KeyStore.
+            return API.ecdsa_bytes2pub(self._power_ups[
+                SigningKeypair].pub_key)  # TODO: Turn this into an ID lookup on a KeyStore.
         except KeyError:
             raise NoSigningPower
 

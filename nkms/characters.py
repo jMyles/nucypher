@@ -4,7 +4,7 @@ from kademlia.network import Server
 from nkms.crypto import api
 from nkms.crypto._alpha import pubkey_tuple_to_bytes
 from nkms.crypto.constants import NOT_SIGNED, NO_DECRYPTION_PERFORMED
-from nkms.crypto.powers import CryptoPower, SigningKeypair, EncryptingPower
+from nkms.crypto.powers import CryptoPower, SigningKeypair, EncryptingPower, NoEncryptingPower
 from nkms.network.server import NuCypherDHTServer, NuCypherSeedOnlyDHTServer
 
 
@@ -95,7 +95,7 @@ class Character(object):
         """
         actor = self._lookup_actor(recipient)
 
-        ciphertext = self._crypto_power.encrypt_for(actor.seal, cleartext)  # TODO: actor.seal is wrong here; we want their enc key, not sig.
+        ciphertext = self._crypto_power.encrypt_for(actor.public_encryption_key(), cleartext)  # TODO: Come up with a better method for getting their private key.
 
         if sign:
             if sign_cleartext:
@@ -145,6 +145,12 @@ class Character(object):
     def id(self):
         return "whatever actor id ends up being - {}".format(id(self))
 
+    def public_encryption_key(self):
+        try:
+            return self._crypto_power._power_ups[EncryptingPower].keypair.pubkey
+        except KeyError:
+            raise NoEncryptingPower
+
 
 class Alice(Character):
     _server_class = NuCypherSeedOnlyDHTServer
@@ -175,4 +181,4 @@ class Bob(Character):
 
 class Ursula(Character):
     _server_class = NuCypherDHTServer
-    _default_crypto_powerups = [SigningKeypair]
+    _default_crypto_powerups = [SigningKeypair, EncryptingPower]
