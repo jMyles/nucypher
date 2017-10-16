@@ -1,6 +1,9 @@
-from typing import Iterable, List, Tuple
+from random import SystemRandom
+from typing import Iterable, Union, List, Tuple
 
-from nkms.crypto import api
+from py_ecc.secp256k1 import N, privtopub
+
+from nkms.crypto import api as API
 from nkms.crypto._alpha import generate_random_keypair
 from nkms.keystore import keypairs
 from nkms.keystore.keypairs import EncryptingKeypair
@@ -60,9 +63,7 @@ class CryptoPower(object):
     def sign(self, *messages):
         """
         Signs a message and returns a signature with the keccak hash.
-
         :param Iterable messages: Messages to sign in an iterable of bytes
-
         :rtype: bytestring
         :return: Signature of message
         """
@@ -70,7 +71,7 @@ class CryptoPower(object):
             sig_keypair = self._power_ups[SigningKeypair]
         except KeyError:
             raise NoSigningPower
-        msg_digest = b"".join(api.keccak_digest(m) for m in messages)
+        msg_digest = b"".join(API.keccak_digest(m) for m in messages)
 
         return sig_keypair.sign(msg_digest)
 
@@ -104,9 +105,12 @@ class SigningKeypair(CryptoPowerUp):
         # TODO: Do something with keypair.
         self.priv_key, self.pub_key = generate_random_keypair()
 
+    def pubkey_bytes(self):
+        return b''.join(i.to_bytes(32, 'big') for i in self.pub_key)
+
     def sign(self, msghash):
         """
-        TODO: Use crypto api sign()
+        TODO: Use crypto API sign()
 
         Signs a hashed message and returns a msgpack'ed v, r, and s.
 
@@ -115,8 +119,8 @@ class SigningKeypair(CryptoPowerUp):
         :rtype: Bytestring
         :return: Msgpacked bytestring of v, r, and s (the signature)
         """
-        v, r, s = api.ecdsa_sign(msghash, self.priv_key)
-        return api.ecdsa_gen_sig(v, r, s)
+        v, r, s = API.ecdsa_sign(msghash, self.priv_key)
+        return API.ecdsa_gen_sig(v, r, s)
 
     def public_key(self):
         return self.pub_key
@@ -150,8 +154,8 @@ class EncryptingPower(CryptoPowerUp):
         return [b'/'.join(dirs[:i + 1]) for i in range(len(dirs))]
 
     def _derive_path_key(
-            self,
-            path: bytes,
+        self,
+        path: bytes,
     ) -> bytes:
         """
         Derives a key for the specific path.
@@ -160,66 +164,50 @@ class EncryptingPower(CryptoPowerUp):
 
         :return: Derived key
         """
-        priv_key = api.keccak_digest(self.priv_key, path)
-        pub_key = api.ecies_priv2pub(priv_key)
+        priv_key = API.keccak_digest(self.priv_key, path)
+        pub_key = API.ecies_priv2pub(priv_key)
         return (priv_key, pub_key)
 
     def _encrypt_key(
             self,
-            data_key: bytes,
-            path_key: bytes,
-    ) -> bytes:
-        """
-        Encrypts the data key with the path keys provided.
-
-        :param data_key: Symmetric data key to encrypt
-        :param path_keys: Path keys to encrypt the data_key with
-
-        :return: List[Tuple[enc_key_data, enc_key_path]]
-        """
-        plain_key_data, enc_key_path = api.ecies_encapsulate(path_key)
-        enc_key_data = api.symm_encrypt(plain_key_data, data_key)
-        return (enc_key_data, enc_key_path)
-
-    def _decrypt_key(
-            self,
-            enc_data_key: bytes,
-            enc_path_key: bytes,
-            priv_key: bytes
-    ) -> bytes:
-        """
-        Decrypts the enc_data_key via ECIES decapsulation.
-
-        TODO: Name these params better
-
-        :param enc_data_key: Encrypted key to decrypt
-        :param enc_path_key: ECIES encapsulated key
-        :param priv_key: Private key to use in ECIES decapsulate
-
-        :return: decrypted key
-        """
-        dec_symm_key = api.ecies_decapsulate(priv_key, enc_path_key)
-        return api.symm_decrypt(dec_symm_key, enc_data_key)
-
-    def encrypt(
-            self,
-            data: bytes,
-            pubkey: bytes,
+            key: bytes,
+            pubkey: bytes = None
     ) -> Tuple[bytes, bytes]:
         """
-        Encrypts data with Public key encryption
+        Encrypts the `key` provided for the provided `pubkey` using the ECIES
+        schema. If no `pubkey` is provided, it uses `self.pub_key`.
 
-        :param data: Data to encrypt
-        :param pubkey: publc key to encrypt for
+        :param key: Key to encrypt
+        :param pubkey: Public Key to encrypt the `key` for
 
-        :return: (Encrypted Key, Encrypted data)
+        :return (encrypted key, encapsulated ECIES key)
         """
         pubkey = pubkey or self.pub_key
 
-        key, enc_key = api.ecies_encapsulate(pubkey)
-        enc_data = api.symm_encrypt(key, data)
+        symm_key, enc_symm_key = API.ecies_encaspulate(pubkey)
+        enc_key = API.symm_encrypt(symm_key, key)
+        return (enc_key, enc_symm_key)
 
-        return (api.elliptic_curve.serialize(enc_key.ekey), enc_data)
+    def _decrypt_key(
+            self,
+            enc_key: bytes,
+            enc_symm_key: bytes,
+            privkey: bytes = None
+    ) -> bytes:
+        """
+        Decrypts the encapsulated `enc_key` with the `privkey`, if provided.
+        If `privkey` is None, then it uses `self.priv_key`.
+
+        :param enc_key: ECIES encapsulated key
+        :param enc_symm_key: Symmetrically encrypted key
+        :param privkey: Private key to decrypt with (if provided)
+
+        :return: Decrypted key
+        """
+        privkey = privkey or self.priv_key
+
+        dec_symm_key = API.ecies_decapsulate(privkey)
+        return API.symm_decrypt(dec_symm_key, enc_symm_key)
 
     def gen_path_keys(
             self,
@@ -239,5 +227,42 @@ class EncryptingPower(CryptoPowerUp):
             keys.append((path_priv, path_pub))
         return keys
 
-    def decrypt(self, *args, **kwargs):
-        return self.keypair.decrypt(*args, **kwargs)
+    def encrypt(
+            self,
+            data: bytes,
+            pubkey: bytes = None
+    ) -> Tuple[bytes, bytes]:
+        """
+        Encrypts data with Public key encryption
+
+        :param data: Data to encrypt
+        :param pubkey: publc key to encrypt for
+
+        :return: (Encrypted Key, Encrypted data)
+        """
+        pubkey = pubkey or self.pub_key
+
+        key, enc_key = API.ecies_encapsulate(pubkey)
+        enc_data = API.symm_encrypt(key, data)
+        return (enc_data, API.elliptic_curve.serialize(enc_key.ekey))
+
+    def decrypt(
+            self,
+            enc_data: Tuple[bytes, bytes],
+            privkey: bytes = None
+    ) -> bytes:
+        """
+        Decrypts data using ECIES PKE. If no `privkey` is provided, it uses
+        `self.priv_key`.
+
+        :param enc_data: Tuple: (encrypted data, ECIES encapsulated key)
+        :param privkey: Private key to decapsulate with
+
+        :return: Decrypted data
+        """
+        privkey = privkey or self.priv_key
+        ciphertext, enc_key = enc_data
+        enc_key = API.elliptic_curve.deserialize(enc_key)
+
+        dec_key = API.ecies_decapsulate(privkey, enc_key)
+        return API.symm_decrypt(dec_key, ciphertext)

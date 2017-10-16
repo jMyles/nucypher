@@ -108,7 +108,7 @@ class Character(object):
         return ciphertext, signature
 
     def verify_from(self, actor_whom_sender_claims_to_be: "Character", signature: bytes,
-                    *messages: bytes, decrypt=False,
+                    message: bytes, decrypt=False,
                     signature_is_on_cleartext=False) -> tuple:
         """
         Inverse of encrypt_for.
@@ -122,13 +122,13 @@ class Character(object):
         cleartext = NO_DECRYPTION_PERFORMED
         if signature_is_on_cleartext:
             if decrypt:
-                cleartext = self._crypto_power.decrypt(*messages)
+                cleartext = self._crypto_power.decrypt(message)
                 msg_digest = api.keccak_digest(cleartext)
             else:
                 raise ValueError(
                     "Can't look for a signature on the cleartext if we're not decrypting.")
         else:
-            msg_digest = b"".join(api.keccak_digest(m) for m in messages)
+            msg_digest = api.keccak_digest(message)
 
         actor = self._lookup_actor(actor_whom_sender_claims_to_be)
         signature_pub_key = actor.seal
