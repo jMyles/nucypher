@@ -4,7 +4,6 @@ from typing import Iterable, Union, List, Tuple
 from py_ecc.secp256k1 import N, privtopub
 
 from nkms.crypto import api as API
-from nkms.crypto._alpha import generate_random_keypair
 from nkms.keystore import keypairs
 from nkms.keystore.keypairs import SigningKeypair as RealSigingKeypair, EncryptingKeypair
 
