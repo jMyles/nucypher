@@ -336,7 +336,7 @@ def ecies_rekey(
         privkey_a: Union[bytes, elliptic_curve.ec_element],
         privkey_b: Union[bytes, elliptic_curve.ec_element],
         to_bytes: bool = True
-) -> Union[bytes, umbral.RekeyFrag]:
+) -> Union[bytes, tuple]:
     """
     Generates a re-encryption key from privkey_a to privkey_b.
 
@@ -362,7 +362,7 @@ def ecies_split_rekey(
         privkey_b: Union[bytes, elliptic_curve.ec_element],
         min_shares: int,
         total_shares: int
-) -> List[umbral.RekeyFrag]:
+) -> List[KFrag]:
     """
     Performs a split-key re-encryption key generation where a minimum
     number of shares `min_shares` are required to reproduce a rekey.
@@ -379,9 +379,9 @@ def ecies_split_rekey(
         privkey_a = priv_bytes2ec(privkey_a)
     if type(privkey_b) == bytes:
         privkey_b = priv_bytes2ec(privkey_b)
-    umbral_rekeys = PRE.split_rekey(privkey_a, privkey_b,
+    kfrag_tuples = PRE.split_rekey(privkey_a, privkey_b,
                                     min_shares, total_shares)
-    return [KFrag(umbral_kfrag=u) for u in umbral_rekeys]
+    return [KFrag(id_plus_key_as_bytes=None, *kfrag_tuple) for kfrag_tuple in kfrag_tuples]
 
 
 def ecies_ephemeral_split_rekey(
@@ -389,7 +389,7 @@ def ecies_ephemeral_split_rekey(
         pubkey_b: Union[bytes, elliptic_curve.ec_element],
         min_shares: int,
         total_shares: int
-) -> Tuple[List[umbral.RekeyFrag], Tuple[bytes, bytes]]:
+):  # TODO: Redo return type hint.
     """
     Performs a split-key re-encryption key generation where a minimum
     number of shares `min_shares` are required to reproduce a rekey.
@@ -425,7 +425,7 @@ def ecies_combine(
 
 
 def ecies_reencrypt(
-        rekey: Union[bytes, umbral.RekeyFrag],
+        rekey, # : Union[bytes, umbral.RekeyFrag],
         enc_key: Union[bytes, umbral.EncryptedKey],
 ) -> umbral.EncryptedKey:
     """

@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from nkms.crypto.fragments import KFrag
 from nkms.keystore.db import Base
 from nkms.keystore import keystore, keypairs
-from npre.umbral import RekeyFrag
+# from npre.umbral import RekeyFrag
 from nkms.crypto import api as API
 
 

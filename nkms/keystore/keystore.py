@@ -7,7 +7,7 @@ from nkms.crypto.utils import BytestringSplitter
 from nkms.crypto.signature import Signature
 from sqlalchemy.orm import sessionmaker
 from typing import Union
-from npre.umbral import RekeyFrag
+# from npre.umbral import RekeyFrag
 
 
 class KeyNotFound(KeyError):
@@ -88,7 +88,7 @@ class KeyStore(object):
                     "No key with fingerprint {} found.".format(fingerprint))
         return keypairs.Keypair.deserialize_key(key.key_data)
 
-    def get_kfrag(self, hrac: bytes, get_sig: bool=False) -> RekeyFrag:
+    def get_kfrag(self, hrac: bytes, get_sig: bool=False) -> KFrag:
         """
         Returns a RekeyFrag from the KeyStore.
 
@@ -132,7 +132,7 @@ class KeyStore(object):
         self.session.commit()
         return fingerprint
 
-    def add_kfrag(self, hrac: bytes, kfrag: RekeyFrag, sig: bytes=None):
+    def add_kfrag(self, hrac: bytes, kfrag: KFrag, sig: bytes=None):
         """
         Adds a RekeyFrag to sqlite.
 

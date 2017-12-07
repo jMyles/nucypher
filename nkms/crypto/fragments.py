@@ -1,6 +1,6 @@
 from nkms.crypto.utils import BytestringSplitter
 from npre.constants import UNKNOWN_KFRAG
-from npre.umbral import RekeyFrag, EncryptedKey
+from npre.umbral import EncryptedKey
 
 
 class PFrag(object):
@@ -11,7 +11,7 @@ class PFrag(object):
     splitter = BytestringSplitter((bytes, _key_length), (bytes, _message_length))
 
     def __init__(self, ephemeral_data_as_bytes=None, encrypted_key=None, encrypted_message=None):
-        from nkms.crypto.api import PRE  # Avoid circular import
+        # from nkms.crypto.api import PRE  # Avoid circular import
         if ephemeral_data_as_bytes and encrypted_key:
             raise ValueError("Pass either the ephemeral data as bytes or the encrypted key and message.  Not both.")
         elif ephemeral_data_as_bytes:
@@ -41,10 +41,12 @@ class KFrag(object):
     _is_unknown_kfrag = False
 
     def __init__(self, id_plus_key_as_bytes=None, umbral_kfrag=None):
+        from nkms.crypto.api import PRE
         if all((id_plus_key_as_bytes, umbral_kfrag)):
             raise ValueError("Pass either the id/key or an umbral_kfrag (or neither for UNKNOWN_KFRAG).  Not both.")
         elif id_plus_key_as_bytes:
-            self._umbral_kfrag = RekeyFrag.from_bytes(id_plus_key_as_bytes)
+            id = ec.deserialize(pre.ecgroup, kfrag_bytes[:len(kfrag_bytes) // 2]),
+            key=ec.deserialize(pre.ecgroup, kfrag_bytes[len(kfrag_bytes) // 2:])
         elif umbral_kfrag:
             self._umbral_kfrag = umbral_kfrag
         else:
