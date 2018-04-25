@@ -37,7 +37,7 @@ class SolidityCompiler:
         https://github.com/ethereum/py-solc#installing-the-solc-binary
         """
         version = version if version is not None else self.__default_version
-        return install_solc(version)  # TODO: fix path
+        return install_solc(version, platform=None)  # TODO: fix path
 
     def compile(self) -> dict:
         """Executes the compiler with parameters specified in the json config"""
@@ -53,21 +53,18 @@ class SolidityCompiler:
                 if filename.endswith('.sol'):
                     source_paths.add(os.path.join(root, filename))
 
-        # Compile with remappings
-        # https://github.com/ethereum/py-solc
+        # Compile with remappings: https://github.com/ethereum/py-solc
         project_root = dirname(self._solidity_source_dir)
 
-        remappings = ["contracts={}".format(self._solidity_source_dir),
+        remappings = ("contracts={}".format(self._solidity_source_dir),
                       "zeppelin={}".format(os.path.join(project_root, 'zeppelin')),
-                      "proxy={}".format(os.path.join(project_root, 'proxy'))
-                      ]
+                      "proxy={}".format(os.path.join(project_root, 'proxy')),
+                      )
 
         compiled_sol = compile_files(source_files=source_paths,
                                      import_remappings=remappings,
                                      allow_paths=project_root,
-                                     optimize=True)
-                                     # libraries="AdditionalMath:0x00000000000000000000 Heap:0xABCDEF0123456"
-                                     #           "LinkedList::0x00000000000000000000 Heap:0xABCDEF0123456")
+                                     optimize=10)
 
         # Cleanup the compiled data keys
         interfaces = {name.split(':')[-1]: compiled_sol[name] for name in compiled_sol}
