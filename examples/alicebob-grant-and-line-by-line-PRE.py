@@ -26,7 +26,7 @@ ALICE = Alice(network_middleware=network_middleware)
 policy_end_datetime = maya.now() + datetime.timedelta(days=5)
 m = 1
 n = 1
-label = b"secret/files/and/stuff"
+label = b"irish novels"
 
 
 # Alice gets on the network and, knowing about at least one Ursula,
@@ -38,10 +38,24 @@ BOB = Bob()
 policy = ALICE.grant(BOB, label, m=m, n=n,
                      expiration=policy_end_datetime)
 
-# Alice puts her public key somewhere for Bob to find later...
-alices_pubkey_saved_for_posterity = bytes(ALICE.stamp)
+# Now, in order for Bob to be able to gain access to resources granted
+# under this label, Alice needs to leave two things in a place where Bob
+# can find them:
 
-# ...and then disappears from the internet.
+alices_pubkey_saved_for_posterity = bytes(ALICE.stamp)
+policy_pubkey_saved_for_posterity = policy.public_key
+
+# A quick aside on stamp: a Character's stamp can be used to sign on behalf
+# of that Character or, as seen here, cast as the bytes of the public signing
+# key.  So, a somewhat typical workflow at this moment might be to pass the stamp
+# into a function where some items are signed (perhaps including the policy.public_key)
+# and then cast it to bytes for use as a public key.
+
+# The policy.public_key is left behind so that anybody who wishes to encrypt
+# content to be accessed under this label can use it to encrypt.
+
+# At this time, Alice's responsibilities have concluded.
+# She can disappear from the internet.
 del ALICE
 # (this is optional of course - she may wish to remain in order to create
 # new policies in the future.  The point is - she is no longer obligated.
@@ -102,6 +116,7 @@ for counter, plaintext in enumerate(finnegans_wake):
 
     # First we make a DataSource for this policy.
     data_source = DataSource(policy_pubkey_enc=policy.public_key())
+    data_source = DataSource(policy_pubkey_enc=policy_pubkey_saved_for_posterity)
 
     # Here's how we generate a MessageKit for the Policy.  We also get a signature
     # here, which can be passed via a side-channel (or posted somewhere public as
@@ -111,13 +126,15 @@ for counter, plaintext in enumerate(finnegans_wake):
     # is left to the reader to determine.
     message_kit, _signature = data_source.encapsulate_single_message(plaintext)
 
-    # The DataSource will want to be able to be verified by Bob, so it leaves
-    # its Public Key somewhere.
+    # We want Bob to be able to verify this DataSource, so we'll leave
+    # its Public Key somewhere for him to find.
     data_source_public_key = bytes(data_source.stamp)
 
-    # It can save the MessageKit somewhere (IPFS, etc) and then it too can
-    # choose to disappear (although it may also opt to continue transmitting
-    # as many messages as may be appropriate).
+    # Here again, you might also use the stamp to sign something(s) first.
+
+    # In practice here, you might opt to save the message_kit on IPFS or something.
+    # You can also delete this DataSource at thsi time (although you may also opt
+    # to continue transmitting as many messages as may be appropriate).
     del data_source
 
     ###############
@@ -126,6 +143,7 @@ for counter, plaintext in enumerate(finnegans_wake):
     # Bob needs to reconstruct the DataSource.
     datasource_as_understood_by_bob = DataSource.from_public_keys(
         policy_public_key=policy.public_key(),
+        policy_public_key=policy_pubkey_saved_for_posterity,
         datasource_public_key=data_source_public_key,
         label=label
     )
