@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
 
-import "../zeppelin/math/SafeMath.sol";
+import "zeppelin/math/SafeMath.sol";
 import "./Dispatcher.sol";
 import "./Upgradeable.sol";
 
@@ -84,7 +84,7 @@ contract Government is Upgradeable {
     * @notice Get voting state
     **/
     function getVotingState() public view returns (VotingState) {
-        if (block.timestamp <= endVotingTimestamp) {
+        if (block.timestamp < endVotingTimestamp) {
             return VotingState.Active;
         }
         if (votesFor > votesAgainst && !upgradeFinished) {
