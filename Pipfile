@@ -22,7 +22,8 @@ constantSorrow = {git = "https://github.com/nucypher/constantSorrow.git", ref = 
 bytestringSplitter = {git = "https://github.com/nucypher/byteStringSplitter.git", ref = "kms-depend"}
 appdirs = "*"
 eth-tester = "==0.1.0b23"
-py-evm = "*"
+py-evm = "==0.2.0a14"
+"web3" = "==4.1.0"
 
 [dev-packages]
 pytest = "*"
@@ -34,7 +35,6 @@ appdirs = "*"
 codecov = "*"
 py-solc = "*"
 ipdb = "*"
-ethereum = "*"
 py-evm = "*"
 eth-tester = "==0.1.0b23"
 py-geth = "*"

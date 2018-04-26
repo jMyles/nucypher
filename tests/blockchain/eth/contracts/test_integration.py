@@ -94,6 +94,7 @@ def wait_time(chain, wait_hours):
         chain.wait.for_block(web3.eth.blockNumber + step)
 
 
+@pytest.mark.slow
 def test_all(web3, chain, token, escrow, policy_manager):
     creator, ursula1, ursula2, ursula3, ursula4, alice1, alice2, *everyone_else = web3.eth.accounts
 
