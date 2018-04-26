@@ -482,8 +482,8 @@ def test_mining(web3, chain, token, escrow_contract):
     tx = escrow.functions.mint().transact({'from': ursula2})
 
     chain.wait_for_receipt(tx)
-    assert 1050 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0)).call()
-    assert 521 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0)).call()
+    assert 1050 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0).call())
+    assert 521 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0).call())
 
     events = mining_log.get_all_entries()
     assert 2 == len(events)
@@ -528,8 +528,8 @@ def test_mining(web3, chain, token, escrow_contract):
     tx = escrow.functions.mint().transact({'from': ursula2})
 
     chain.wait_for_receipt(tx)
-    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0)).call()
-    assert 521 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0)).call()
+    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0).call())
+    assert 521 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0).call())
 
     assert 3 == policy_manager.functions.getPeriodsLength(ursula1).call()
     assert 1 == policy_manager.functions.getPeriodsLength(ursula2).call()
@@ -553,8 +553,8 @@ def test_mining(web3, chain, token, escrow_contract):
     tx = escrow.functions.mint().transact({'from': ursula2})
 
     chain.wait_for_receipt(tx)
-    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0)).call()
-    assert 634 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0)).call()
+    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0).call())
+    assert 634 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula2, 0).call())
 
     assert 3 == policy_manager.functions.getPeriodsLength(ursula1).call()
     assert 3 == policy_manager.functions.getPeriodsLength(ursula2).call()
@@ -572,7 +572,7 @@ def test_mining(web3, chain, token, escrow_contract):
     tx = escrow.functions.mint().transact({'from': ursula1})
 
     chain.wait_for_receipt(tx)
-    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0)).call()
+    assert 1163 == web3.toInt(escrow.functions.getMinerInfo(VALUE_FIELD, ursula1, 0).call())
 
     with pytest.raises((TransactionFailed, ValueError)):
         tx = escrow.functions.confirmActivity().transact({'from': ursula1})

@@ -1,7 +1,7 @@
-import pytest
-from eth_tester.exceptions import TransactionFailed
 import os
 
+import pytest
+from eth_tester.exceptions import TransactionFailed
 from web3.contract import Contract
 
 MINERS_LENGTH = 0
@@ -84,14 +84,6 @@ def policy_manager(web3, chain, escrow):
     chain.wait_for_receipt(tx)
 
     return contract
-
-
-def wait_time(chain, wait_hours):
-    web3 = chain.w3
-    step = 50
-    end_timestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp + wait_hours * 60 * 60
-    while web3.eth.getBlock(web3.eth.blockNumber).timestamp < end_timestamp:
-        chain.wait.for_block(web3.eth.blockNumber + step)
 
 
 def test_all(web3, chain, token, escrow, policy_manager):
