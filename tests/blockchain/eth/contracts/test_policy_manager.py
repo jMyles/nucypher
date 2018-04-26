@@ -79,12 +79,13 @@ def test_create_revoke(web3, chain, escrow, policy_manager):
     node1 = web3.eth.accounts[3]
     node2 = web3.eth.accounts[4]
     node3 = web3.eth.accounts[5]
+
     client_balance = web3.eth.getBalance(client)
-    policy_created_log = policy_manager.events.PolicyCreated.createFilter(fromBlock=0)
-    arrangement_revoked_log = policy_manager.events.ArrangementRevoked.createFilter(fromBlock=0)
-    policy_revoked_log = policy_manager.events.PolicyRevoked.createFilter(fromBlock=0)
-    arrangement_refund_log = policy_manager.events.RefundForArrangement.createFilter(fromBlock=0)
-    policy_refund_log = policy_manager.events.RefundForPolicy.createFilter(fromBlock=0)
+    policy_created_log = policy_manager.events.PolicyCreated.createFilter(fromBlock='latest')
+    arrangement_revoked_log = policy_manager.events.ArrangementRevoked.createFilter(fromBlock='latest')
+    policy_revoked_log = policy_manager.events.PolicyRevoked.createFilter(fromBlock='latest')
+    arrangement_refund_log = policy_manager.events.RefundForArrangement.createFilter(fromBlock='latest')
+    policy_refund_log = policy_manager.events.RefundForPolicy.createFilter(fromBlock='latest')
 
     # Try create policy for bad node
     with pytest.raises((TransactionFailed, ValueError)):
@@ -264,7 +265,7 @@ def test_reward(web3, chain, escrow, policy_manager):
     node2 = web3.eth.accounts[4]
     node3 = web3.eth.accounts[5]
     node_balance = web3.eth.getBalance(node1)
-    withdraw_log = policy_manager.events.Withdrawn.createFilter(fromBlock=0)
+    withdraw_log = policy_manager.events.Withdrawn.createFilter(fromBlock='latest')
 
     # Mint period without policies
     period = escrow.functions.getCurrentPeriod().call()
@@ -331,11 +332,11 @@ def test_refund(web3, chain, escrow, policy_manager):
     node2 = web3.eth.accounts[4]
     node3 = web3.eth.accounts[5]
     client_balance = web3.eth.getBalance(client)
-    policy_created_log = policy_manager.events.PolicyCreated.createFilter(fromBlock=0)
-    arrangement_revoked_log = policy_manager.events.ArrangementRevoked.createFilter(fromBlock=0)
-    policy_revoked_log = policy_manager.events.PolicyRevoked.createFilter(fromBlock=0)
-    arrangement_refund_log = policy_manager.events.RefundForArrangement.createFilter(fromBlock=0)
-    policy_refund_log = policy_manager.events.RefundForPolicy.createFilter(fromBlock=0)
+    policy_created_log = policy_manager.events.PolicyCreated.createFilter(fromBlock='latest')
+    arrangement_revoked_log = policy_manager.events.ArrangementRevoked.createFilter(fromBlock='latest')
+    policy_revoked_log = policy_manager.events.PolicyRevoked.createFilter(fromBlock='latest')
+    arrangement_refund_log = policy_manager.events.RefundForArrangement.createFilter(fromBlock='latest')
+    policy_refund_log = policy_manager.events.RefundForPolicy.createFilter(fromBlock='latest')
 
     # Create policy
     tx = policy_manager.functions.createPolicy(policy_id, number_of_periods, [node1]).transact({'from': client, 'value': value, 'gas_price': 0})

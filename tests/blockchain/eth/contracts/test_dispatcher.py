@@ -149,7 +149,7 @@ def test_dispatcher(web3, chain):
         chain.wait_for_receipt(tx)
     assert dispatcher.functions.target().call() == contract2_lib.address
 
-    rollbacks = dispatcher.events.RolledBack.createFilter(fromBlock=0)
+    rollbacks = dispatcher.events.RolledBack.createFilter(fromBlock='latest')
 
     # But can rollback
     tx = dispatcher.functions.rollback().transact({'from': creator})
@@ -188,7 +188,7 @@ def test_dispatcher(web3, chain):
     #     abi=contract1_lib.abi,
     #     address=dispatcher.address,
     #     ContractFactoryClass=Contract)
-    # test_events = contract_instance.events.EventV1.createFilter(fromBlock=0)
+    # test_events = contract_instance.events.EventV1.createFilter(fromBlock='latest')
     # events = test_events.get_all_entries()
     # tx =  contract_instance.functions.createEvent(33).transact({'from': creator})
     # chain.wait_for_receipt(tx)
@@ -239,7 +239,7 @@ def test_dispatcher(web3, chain):
     # Create and check events
     tx =  contract_instance.functions.createEvent(22).transact({'from': creator})
     chain.wait_for_receipt(tx)
-    test_eventv2_log = contract_instance.events.EventV2.createFilter(fromBlock=0)
+    test_eventv2_log = contract_instance.events.EventV2.createFilter(fromBlock='latest')
     events = test_eventv2_log.get_all_entries()
 
     assert 1 == len(events)
@@ -251,7 +251,7 @@ def test_dispatcher(web3, chain):
     #     address=dispatcher.address,
     #     ContractFactoryClass=Contract)
     #
-    # test_eventv1_log = contract_instance.events.EventV1.createFilter(fromBlock=0)
+    # test_eventv1_log = contract_instance.events.EventV1.createFilter(fromBlock='latest')
     # events = test_eventv1_log.get_all_entries()
     #
     # assert 1 == len(events)
