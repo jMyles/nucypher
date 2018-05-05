@@ -52,8 +52,15 @@ class Arrangement(BlockchainArrangement):
         arrangement_delta = maya.now() - self.expiration
         policy_duration = arrangement_delta.days
 
+
+        # TODO: 148
+        if self.deposit == constants.NON_PAYMENT:
+            deposit = 0
+        else:
+            deposit = self.deposit
+
         super().__init__(author=self.alice, miner=ursula,
-                         value=self.deposit, periods=policy_duration,
+                         value=deposit, periods=policy_duration,
                          arrangement_id=self._make_arrangement_id())
 
     def __bytes__(self):
@@ -72,7 +79,7 @@ class Arrangement(BlockchainArrangement):
         alice_pubkey_sig, hrac, expiration_bytes, deposit_bytes = cls.splitter(arrangement_as_bytes)
         expiration = maya.parse(expiration_bytes.decode())
         alice = Alice.from_public_keys({SigningPower: alice_pubkey_sig})
-        return cls(alice=alice, hrac=hrac, expiration=expiration, deposit=int(deposit_bytes))
+        return cls(alice=alice, hrac=hrac, expiration=expiration, deposit=deposit_bytes)
 
     def publish(self, kfrag, ursula, negotiation_result):
         self.kfrag = kfrag

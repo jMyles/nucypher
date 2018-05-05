@@ -713,6 +713,7 @@ def test_pre_deposit(web3, chain, token, escrow_contract):
     assert 250 == event_args['periods']
 
 
+@pytest.mark.slow
 def test_miner_id(web3, chain, token, escrow_contract):
     escrow = escrow_contract(5 * 10 ** 8)
     creator = web3.eth.accounts[0]
@@ -745,6 +746,7 @@ def test_miner_id(web3, chain, token, escrow_contract):
     assert miner_id == escrow.functions.getMinerInfo(MINER_ID_FIELD, miner, 1).call()
 
 
+@pytest.mark.slow
 def test_verifying_state(web3, chain, token):
     creator = web3.eth.accounts[0]
     miner = web3.eth.accounts[1]

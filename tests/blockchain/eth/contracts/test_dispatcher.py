@@ -3,6 +3,7 @@ from eth_tester.exceptions import TransactionFailed
 from web3.contract import Contract
 
 
+@pytest.mark.slow
 def test_dispatcher(web3, chain):
     """
     These are tests for Dispatcher taken from github:
