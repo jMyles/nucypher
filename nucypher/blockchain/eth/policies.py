@@ -8,7 +8,6 @@ from nucypher.blockchain.eth.actors import PolicyAuthor
 
 from nucypher.blockchain.eth.actors import Miner
 from nucypher.blockchain.eth.agents import MinerAgent
-from nucypher.characters import Ursula
 from nucypher.policy.models import Arrangement, Policy
 
 
@@ -100,7 +99,7 @@ class BlockchainPolicy(Policy):
         return arrangement
 
     def make_arrangements(self, network_middleware, quantity: int,
-                          deposit: int, expiration: maya.MayaDT, ursulas: Set[Ursula]=None) -> None:
+                          deposit: int, expiration: maya.MayaDT, ursulas: Set["Ursula"]=None) -> None:
         """
         Create and consider n Arangement objects from sampled miners.
         """
@@ -112,12 +111,13 @@ class BlockchainPolicy(Policy):
 
         else:
             try:
-                sampled_miners = self.alice.recruit(quantity=quantity or self.n)
+                sampled_miners = self.alice.miner_agent.sample(quantity=quantity or self.n)
             except MinerAgent.NotEnoughMiners:
                 raise  # TODO
             else:
                 # TODO: Copy the values..?
-                ursulas = (Ursula.from_miner(miner, is_me=False) for miner in sampled_miners)
+                ursulas = self.alice.get_nodes_by_addresses(sampled_miners)
+                    # (Ursula.from_miner(miner, is_me=False) for miner in sampled_miners)
 
         for selected_ursula in ursulas:
 

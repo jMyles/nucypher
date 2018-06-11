@@ -32,8 +32,14 @@ def make_ursulas(ether_addresses: list, ursula_starting_port: int, miners=False)
 
     _ursulas = []
     for port, ether_address in enumerate(ether_addresses, start=ursula_starting_port):
-        ursula = Ursula(is_me=True, ether_address=ether_address, dht_port=port, db_name="test-{}".format(port),
-                        ip_address="127.0.0.1", rest_port=port+100)
+        ursula = Ursula(is_me=True,
+                        ether_address=ether_address,
+                        dht_port=port,
+                        db_name="test-{}".format(port),
+                        ip_address="127.0.0.1",
+                        rest_port=port+100,
+                        always_be_learning=False
+                        )
 
         class MockDatastoreThreadPool(object):
             def callInThread(self, f, *args, **kwargs):
@@ -55,9 +61,13 @@ def make_ursulas(ether_addresses: list, ursula_starting_port: int, miners=False)
             # ursula.miner_agent.blockchain.time_travel(periods=1)
             pass
 
-        _ursulas.append(ursula)
+            _ursulas.append(ursula)
 
     for ursula in _ursulas:
+        # Add other Ursulas as known nodes.
+        assert False
+
+
         event_loop.run_until_complete(
             ursula.dht_server.bootstrap([("127.0.0.1", ursula_starting_port + _c) for _c in range(len(_ursulas))]))
         ursula.publish_dht_information()
