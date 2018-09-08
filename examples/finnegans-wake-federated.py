@@ -1,7 +1,7 @@
 # This is an example of Alice setting a Policy on the NuCypher network.
-# In this example, Alice uses n=1, which is almost always a bad idea.  Don't do it.
+# In this example, Alice uses n=3.
 
-# WIP w/ hendrix@3.0.0
+# WIP w/ hendrix@3.1.0
 
 import binascii
 import datetime
@@ -15,6 +15,10 @@ from nucypher.data_sources import DataSource
 # This is already running in another process.
 from nucypher.network.middleware import RestMiddleware
 from umbral.keys import UmbralPublicKey
+
+##
+# Boring setup stuff.
+##
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -33,14 +37,12 @@ with open("examples-runtime-cruft/node-metadata-{}".format(teacher_rest_port), "
 URSULA = Ursula.from_bytes(teacher_bytes, federated_only=True)
 print("Will learn from {}".format(URSULA))
 
-# network_middleware = SandboxRestMiddleware([URSULA])
-
 #########
 # Alice #
 #########
 
 ALICE = Alice(network_middleware=RestMiddleware(),
-              known_nodes=(URSULA,),  # in lieu of seed nodes
+              known_nodes=(URSULA,),
               federated_only=True,
               always_be_learning=True)  # TODO: 289
 
