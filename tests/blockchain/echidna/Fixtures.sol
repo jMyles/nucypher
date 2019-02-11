@@ -33,11 +33,11 @@ library Fixtures {
     **/
     function addressList(uint256 _index) internal pure returns (address) {
         if (_index == 1) {
-            return 0x1;
+            return address(0x1);
         } else if (_index == 2) {
-            return 0x2;
+            return address(0x2);
         } else if (_index == 3) {
-            return 0x3;
+            return address(0x3);
         }
         revert();
     }
@@ -84,7 +84,7 @@ library Fixtures {
         internal returns (UserEscrowLibraryLinker)
     {
         UserEscrowProxy userEscrowProxy = new UserEscrowProxy(_token, _escrow, _policyManager);
-        return new UserEscrowLibraryLinker(userEscrowProxy, bytes32(1));
+        return new UserEscrowLibraryLinker(userEscrowProxy, address(0x1));
     }
 
     /**
