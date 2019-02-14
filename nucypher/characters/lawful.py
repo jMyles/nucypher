@@ -401,7 +401,7 @@ class Bob(Character):
         return keccak_digest(bytes(verifying_key) + self.stamp + label)
 
     def construct_hrac_and_map_id(self, verifying_key, label):
-        hrac = self.construct_policy_hrac(verifying_key, label)
+        hrac = self.construct_policy_hrac(verifying_key, label)  # TODO: Maybe something wrong.
         map_id = keccak_digest(bytes(verifying_key) + hrac).hex()
         return hrac, map_id
 
