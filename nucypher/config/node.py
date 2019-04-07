@@ -333,16 +333,10 @@ class NodeConfiguration(ABC):
         message = "Removed all stored node node metadata and certificates"
         self.log.debug(message)
 
-    def destroy(self, force: bool = False, logs: bool = True) -> None:
-
-        # TODO: Further confirm this is a nucypher dir first! (in-depth measure)
-
-        if logs is True or force:
-            shutil.rmtree(USER_LOG_DIR, ignore_errors=True)
-        try:
-            shutil.rmtree(self.config_root, ignore_errors=force)
-        except FileNotFoundError:
-            raise FileNotFoundError("No such directory {}".format(self.config_root))
+    def destroy(self) -> None:
+        """Parse a node configuration and remove all associated files from the filesystem"""
+        self.keyring.destroy()
+        os.remove(self.config_file_location)
 
     def generate_parameters(self, **overrides) -> dict:
         merged_parameters = {**self.static_payload, **self.dynamic_payload, **overrides}
@@ -398,21 +392,26 @@ class NodeConfiguration(ABC):
                                                   deserializer=cls.NODE_DESERIALIZER)
 
         # Deserialize domains to UTF-8 bytestrings
-        domains = list(domain.encode() for domain in payload['domains'])
+        domains = set(domain.encode() for domain in payload['domains'])
         payload.update(dict(node_storage=node_storage, domains=domains))
 
         # Filter out Nones from overrides to detect, well, overrides
         overrides = {k: v for k, v in overrides.items() if v is not None}
 
         # Instantiate from merged params
-        node_configuration = cls(**{**payload, **overrides})
+        node_configuration = cls(config_file_location=filepath, **{**payload, **overrides})
 
         return node_configuration
 
     def to_configuration_file(self, filepath: str = None) -> str:
         """Write the static_payload to a JSON file."""
-        if filepath is None:
-            filename = '{}{}'.format(self._NAME.lower(), self.__CONFIG_FILE_EXT)
+        if not filepath:
+            filename = f'{self._NAME.lower()}{self._NAME.lower(), }'
+            filepath = os.path.join(self.config_root, filename)
+
+        if os.path.isfile(filepath):
+            # Avoid overriding an existing default configuration
+            filename = f'{self._NAME.lower()}-{self.checksum_public_address[:6]}{self.__CONFIG_FILE_EXT}'
             filepath = os.path.join(self.config_root, filename)
 
         payload = self.static_payload

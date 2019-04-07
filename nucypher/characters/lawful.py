@@ -16,7 +16,6 @@ along with nucypher.  If not, see <https://www.gnu.org/licenses/>.
 """
 import json
 import random
-import secrets
 from base64 import b64encode
 from collections import OrderedDict
 from functools import partial
@@ -102,6 +101,16 @@ class Alice(Character, PolicyAuthor):
         self.log.info(self.banner)
 
         self.active_policies = dict()
+
+    def add_active_policy(self, active_policy):
+        """
+        Adds a Policy object that is active on the NuCypher network to Alice's
+        `active_policies` dictionary by the policy ID.
+        The policy ID is a Keccak hash of the policy label and Bob's stamp bytes
+        """
+        if active_policy.id in self.active_policies:
+            raise KeyError("Policy already exists in active_policies.")
+        self.active_policies[active_policy.id] = active_policy
 
     def generate_kfrags(self, bob: 'Bob', label: bytes, m: int, n: int) -> List:
         """
@@ -325,14 +334,13 @@ class Alice(Character, PolicyAuthor):
             response = controller(interface=controller._internal_controller.grant, control_request=request)
             return response
 
-        @alice_control.route("/revoke/<policy_encrypting_key>", methods=['DELETE'])
-        def revoke(policy_encrypting_key):
+        @alice_control.route("/revoke", methods=['DELETE'])
+        def revoke():
             """
             Character control endpoint for policy revocation.
             """
             response = controller(interface=controller._internal_controller.revoke,
-                                  control_request=request,
-                                  policy_encrypting_key=policy_encrypting_key)
+                                  control_request=request)
             return response
 
         return controller
@@ -536,10 +544,10 @@ class Bob(Character):
 
     def get_reencrypted_cfrags(self, work_order):
         cfrags = self.network_middleware.reencrypt(work_order)
-        for counter, capsule in enumerate(work_order.capsules):
+        for task in work_order.tasks:
             # TODO: Maybe just update the work order here instead of setting it anew.
             work_orders_by_ursula = self._saved_work_orders[work_order.ursula.checksum_public_address]
-            work_orders_by_ursula[capsule] = work_order
+            work_orders_by_ursula[task.capsule] = work_order
         return cfrags
 
     def join_policy(self, label, alice_pubkey_sig, node_list=None, block=False):
@@ -1043,7 +1051,7 @@ class Ursula(Teacher, Character, Miner):
         node_info['checksum_public_address'] = to_checksum_address(node_info.pop("public_address"))
 
         domains_vbytes = VariableLengthBytestring.dispense(node_info['domains'])
-        node_info['domains'] = [constant_or_bytes(d) for d in domains_vbytes]
+        node_info['domains'] = set(constant_or_bytes(d) for d in domains_vbytes)
 
         ursula = cls.from_public_keys(powers_and_material, federated_only=federated_only, **node_info)
         return ursula

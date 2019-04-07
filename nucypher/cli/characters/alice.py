@@ -8,13 +8,14 @@ from nucypher.characters.banners import ALICE_BANNER
 from nucypher.characters.control.emitters import IPCStdoutEmitter
 from nucypher.cli import actions, painting
 from nucypher.cli.config import nucypher_click_config
-from nucypher.cli.types import NETWORK_PORT, EXISTING_READABLE_FILE
+from nucypher.cli.types import NETWORK_PORT, EXISTING_READABLE_FILE, EIP55_CHECKSUM_ADDRESS
 from nucypher.config.characters import AliceConfiguration
 from nucypher.config.constants import GLOBAL_DOMAIN
 
 
 @click.command()
 @click.argument('action')
+@click.option('--checksum-address', help="Run with a specified account", type=EIP55_CHECKSUM_ADDRESS)
 @click.option('--teacher-uri', help="An Ursula URI to start learning from (seednode)", type=click.STRING)
 @click.option('--min-stake', help="The minimum stake the teacher must have to be a teacher", type=click.INT, default=0)
 @click.option('--discovery-port', help="The host port to run node discovery services on", type=NETWORK_PORT, default=9151)  # TODO
@@ -28,7 +29,6 @@ from nucypher.config.constants import GLOBAL_DOMAIN
 @click.option('--registry-filepath', help="Custom contract registry filepath", type=EXISTING_READABLE_FILE)
 @click.option('--bob-encrypting-key', help="Bob's encrypting key as a hexideicmal string", type=click.STRING)
 @click.option('--bob-verifying-key', help="Bob's verifying key as a hexideicmal string", type=click.STRING)
-@click.option('--policy-encrypting-key', help="The Policy encrypting key derived from a label", type=click.STRING)
 @click.option('--label', help="The label for a policy", type=click.STRING)
 @click.option('--m', help="M-Threshold KFrags", type=click.INT)
 @click.option('--n', help="N-Total KFrags", type=click.INT)
@@ -38,6 +38,7 @@ from nucypher.config.constants import GLOBAL_DOMAIN
 @nucypher_click_config
 def alice(click_config,
           action,
+          checksum_address,
           teacher_uri,
           min_stake,
           http_port,
@@ -54,7 +55,6 @@ def alice(click_config,
           dry_run,
           bob_encrypting_key,
           bob_verifying_key,
-          policy_encrypting_key,
           label,
           m,
           n):
@@ -80,6 +80,7 @@ def alice(click_config,
 
         new_alice_config = AliceConfiguration.generate(password=click_config.get_password(confirm=True),
                                                        config_root=config_root,
+                                                       checksum_public_address=checksum_address,
                                                        rest_host="localhost",
                                                        domains={network} if network else None,
                                                        federated_only=federated_only,
@@ -90,21 +91,6 @@ def alice(click_config,
         return painting.paint_new_installation_help(new_configuration=new_alice_config,
                                                     config_root=config_root,
                                                     config_file=config_file)
-
-    elif action == "destroy":
-        """Delete all configuration files from the disk"""
-        if dev:
-            message = "'nucypher ursula destroy' cannot be used in --dev mode"
-            raise click.BadOptionUsage(option_name='--dev', message=message)
-
-        destroyed_path = actions.destroy_system_configuration(config_class=AliceConfiguration,
-                                                              config_file=config_file,
-                                                              network=network,
-                                                              config_root=config_root,
-                                                              force=force)
-
-        return nucypher_click_config.emitter(message=f"Destroyed {destroyed_path}", color='red')
-
     #
     # Get Alice Configuration
     #
@@ -117,12 +103,17 @@ def alice(click_config,
                                           federated_only=True)
 
     else:
-        alice_config = AliceConfiguration.from_configuration_file(
-            filepath=config_file,
-            domains={network or GLOBAL_DOMAIN},
-            network_middleware=click_config.middleware,
-            rest_port=discovery_port,
-            provider_uri=provider_uri)
+        try:
+            alice_config = AliceConfiguration.from_configuration_file(
+                filepath=config_file,
+                domains={network or GLOBAL_DOMAIN},
+                network_middleware=click_config.middleware,
+                rest_port=discovery_port,
+                checksum_public_address=checksum_address,
+                provider_uri=provider_uri)
+        except FileNotFoundError:
+            return actions.handle_missing_configuration_file(character_config_class=AliceConfiguration,
+                                                             config_file=config_file)
 
     if not dev:
         click_config.unlock_keyring(character_configuration=alice_config)
@@ -188,7 +179,18 @@ def alice(click_config,
         return ALICE.controller.grant(request=grant_request)
 
     elif action == "revoke":
-        return ALICE.controller.revoke(policy_encrypting_key=policy_encrypting_key)
+        revoke_request = {
+            'label': label,
+            'bob_verifying_key': bob_verifying_key
+        }
+        return ALICE.controller.revoke(request=revoke_request)
+
+    elif action == "destroy":
+        """Delete all configuration files from the disk"""
+        if dev:
+            message = "'nucypher ursula destroy' cannot be used in --dev mode"
+            raise click.BadOptionUsage(option_name='--dev', message=message)
+        return actions.destroy_configuration(character_config=alice_config, force=force)
 
     else:
         raise click.BadArgumentUsage(f"No such argument {action}")
