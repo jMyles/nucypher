@@ -15,7 +15,6 @@ You should have received a copy of the GNU Affero General Public License
 along with nucypher.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import json
 from base64 import b64encode
 from collections import OrderedDict
@@ -24,10 +23,7 @@ from json.decoder import JSONDecodeError
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
 import maya
-import requests
 import time
-from bytestring_splitter import BytestringKwargifier, BytestringSplittingError
-from bytestring_splitter import BytestringSplitter, VariableLengthBytestring
 from constant_sorrow import constants
 from constant_sorrow.constants import INCLUDED_IN_BYTESTRING, PUBLIC_ONLY, STRANGER_ALICE
 from cryptography.hazmat.backends import default_backend
@@ -45,11 +41,12 @@ from umbral.pre import UmbralCorrectnessError
 from umbral.signing import Signature
 
 import nucypher
+from bytestring_splitter import BytestringKwargifier, BytestringSplittingError
+from bytestring_splitter import BytestringSplitter, VariableLengthBytestring
 from nucypher.blockchain.eth.actors import BlockchainPolicyAuthor
 from nucypher.blockchain.eth.actors import Worker
 from nucypher.blockchain.eth.agents import ContractAgency
 from nucypher.blockchain.eth.agents import StakingEscrowAgent
->>>>>>> 95d520d5d... Adding 'include_completed' as a separate argument from 'cache'.
 from nucypher.blockchain.eth.registry import BaseContractRegistry
 from nucypher.blockchain.eth.token import WorkTracker
 from nucypher.characters.banners import ALICE_BANNER, BOB_BANNER, ENRICO_BANNER, URSULA_BANNER
@@ -599,7 +596,9 @@ class Bob(Character):
 
         return treasure_map
 
-    def work_orders_for_capsule(self, map_id: str, *capsules, num_ursulas: int = None, cache: bool = False,
+    def work_orders_for_capsule(self, map_id: str, *capsules,
+                                num_ursulas: int = None,
+                                cache: bool = False,
                                 include_completed: bool = False):
 
         from nucypher.policy.collections import WorkOrder  # Prevent circular import
@@ -610,7 +609,8 @@ class Bob(Character):
             raise KeyError(
                 "Bob doesn't have the TreasureMap {}; can't generate work orders.".format(map_id))
 
-        useful_work_orders = OrderedDict()
+        incomplete_work_orders = OrderedDict()
+        complete_work_orders = OrderedDict()
 
         if not treasure_map_to_use:
             raise ValueError(
@@ -628,34 +628,35 @@ class Bob(Character):
                     self.log.debug(f"{capsule} already has a saved WorkOrder for this Node:{node_id}.")
                     if existing_work_order.completed:
                         if include_completed:
-                            # TODO: cache expiration?
-                            useful_work_orders[node_id] = existing_work_order
+                            # TODO: Do we want these to expire at some point?
+                            complete_work_orders[node_id] = existing_work_order
                         else:
                             # There is an existing WorkOrder, but we're not using completed WorkOrders.
                             self.log.warn(
-                                 f"Found existing WorkOrder {existing_work_order}, but not using completed WorkOrders.  No choice but to skip node {node_id}")
+                                f"Found existing WorkOrder {existing_work_order}, but not using completed WorkOrders.  No choice but to skip node {node_id}")
                     else:
                         self.log.info("Found an unused WorkOrder.  For now, we'll try to complete it.  See #1197.")
-                        useful_work_orders[node_id] = existing_work_order
+                        incomplete_work_orders[node_id] = existing_work_order
                 else:
                     capsules_to_include.append(capsule)
 
             if capsules_to_include:
                 work_order = WorkOrder.construct_by_bob(arrangement_id, capsules_to_include, ursula, self)
-                useful_work_orders[node_id] = work_order
+                incomplete_work_orders[node_id] = work_order
                 # TODO: Fix this. It's always taking the last capsule
                 if cache:
                     self._saved_work_orders[node_id][capsule] = work_order
             else:
                 self.log.debug(f"All of these Capsules already have WorkOrders for this node: {node_id}")
-            if num_ursulas == len(useful_work_orders):
+            if num_ursulas == len(incomplete_work_orders) + len(complete_work_orders):
+                # TODO: Presently, the order here is haphazard .  Do we want to do the complete or incomplete specifically first?
                 break
 
-        if useful_work_orders == OrderedDict():
+        if incomplete_work_orders == OrderedDict():
             self.log.warn(
                 "No new WorkOrders created.  Try calling this with different parameters.")  # TODO: Clearer instructions.
 
-        return useful_work_orders
+        return incomplete_work_orders, complete_work_orders
 
     def get_reencrypted_cfrags(self, work_order, reuse_already_attached=False):
         if work_order.completed:
@@ -705,7 +706,8 @@ class Bob(Character):
             delegating=data_source.policy_pubkey,
             receiving=self.public_keys(DecryptingPower),
             verifying=alice_verifying_key)
-        work_orders = self.work_orders_for_capsule(map_id, capsule, cache=cache, include_completed=cache)  # TODO: Do we want cache and include_completed to be separately configurable?
+        work_orders = self.work_orders_for_capsule(map_id, capsule, cache=cache,
+                                                   include_completed=cache)  # TODO: Do we want cache and include_completed to be separately configurable?
 
         if cache:
             cfrags_from_complete_work_orders = []
@@ -739,12 +741,14 @@ class Bob(Character):
                     cfrags = self.get_reencrypted_cfrags(work_order, reuse_already_attached=cache)
                 except NodeSeemsToBeDown:
                     # TODO: What to do here?  Ursula isn't supposed to be down.
-                    self.log.info(f"Ursula ({work_order.ursula}) seems to be down while trying to complete WorkOrder: {work_order}")
+                    self.log.info(
+                        f"Ursula ({work_order.ursula}) seems to be down while trying to complete WorkOrder: {work_order}")
                     continue
                 except NotFound:
                     # This Ursula claims not to have a matching KFrag.  Maybe this has been revoked?
                     # TODO: What's the thing to do here?  Do we want to track these Ursulas in some way in case they're lying?
-                    self.log.warn(f"Ursula ({work_order.ursula}) claims not to have the KFrag to complete WorkOrder: {work_order}.  Has accessed been revoked?")
+                    self.log.warn(
+                        f"Ursula ({work_order.ursula}) claims not to have the KFrag to complete WorkOrder: {work_order}.  Has accessed been revoked?")
                     continue
 
                 cfrag = cfrags[0]  # TODO: generalize for WorkOrders with more than one capsule/task
@@ -762,7 +766,8 @@ class Bob(Character):
                     # I got a lot of problems with you people ...
                     the_airing_of_grievances.append(evidence)
             else:
-                raise Ursula.NotEnoughUrsulas("Unable to reach m Ursulas.  See the logs for which Ursulas are down or noncompliant.")
+                raise Ursula.NotEnoughUrsulas(
+                    "Unable to reach m Ursulas.  See the logs for which Ursulas are down or noncompliant.")
 
             if the_airing_of_grievances:
                 # ... and now you're gonna hear about it!
@@ -771,7 +776,7 @@ class Bob(Character):
                 #  - There maybe enough cfrags to still open the capsule
                 #  - This line is unreachable when NotEnoughUrsulas
 
-        if not cache:
+        if not retain_cfrags:
             # If we were caching, then we attached as we went through the loop.
             # If not, we need to do it now.
             for cfrag in valid_cfrags:
@@ -1324,17 +1329,16 @@ class Ursula(Teacher, Character, Worker):
         with ThreadedSession(self.datastore.engine):
             if not bob:  # All
                 return self.datastore.get_workorders()
-            else:        # Filter
+            else:  # Filter
                 work_orders_from_bob = self.datastore.get_workorders(bob_verifying_key=bytes(bob.stamp))
                 return work_orders_from_bob
 
     def _reencrypt(self, kfrag: KFrag, work_order: 'WorkOrder', alice_verifying_key: UmbralPublicKey):
-        
+
         # Prepare a bytestring for concatenating re-encrypted
         # capsule data for each work order task.
         cfrag_byte_stream = bytes()
         for task in work_order.tasks:
-
             # Ursula signs on top of Bob's signature of each task.
             # Now both are committed to the same task.  See #259.
             reencryption_metadata = bytes(self.stamp(bytes(task.signature)))
