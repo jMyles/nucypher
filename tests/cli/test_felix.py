@@ -26,7 +26,6 @@ def test_run_felix(click_runner,
                    agency,
                    deploy_user_input,
                    mock_primary_registry_filepath):
-
     clock = Clock()
     Felix._CLOCK = clock
     Felix.DISTRIBUTION_INTERVAL = 5     # seconds
