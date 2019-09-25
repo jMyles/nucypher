@@ -66,6 +66,16 @@ def test_create_policy(testerchain, agency, token_economics, mock_transacting_po
 
 @pytest.mark.slow()
 @pytest.mark.usefixtures('blockchain_ursulas')
+def test_fetch_policies(agency, policy_meta):
+    token_agent, staking_agent, policy_agent = agency
+    agent = policy_agent
+
+    arrangements = list(agent.fetch_policy(policy_id=policy_meta.policy_id))
+    assert False
+
+
+@pytest.mark.slow()
+@pytest.mark.usefixtures('blockchain_ursulas')
 def test_fetch_policy_arrangements(agency, policy_meta):
     token_agent, staking_agent, policy_agent = agency
     agent = policy_agent
