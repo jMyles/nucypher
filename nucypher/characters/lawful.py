@@ -686,6 +686,7 @@ class Bob(Character):
         for message in message_kits:
 
             # Two sanity checks before we get into network activity.
+            # First sanity check: We have some representation of the sender, so that we can later check the signature.
 
             if message.sender:
                 if enrico and message.sender != enrico:
@@ -695,12 +696,18 @@ class Bob(Character):
             else:
                 raise TypeError
 
+            # Second sanity check: If we're not using attached cfrags, we don't want a Capsule which has them.
+
             capsule = message.capsule
 
             if len(capsule) > 0:
                 if not use_attached_cfrags:
                     raise TypeError(
                         "Not using cached retrievals, but the MessageKit's capsule has attached CFrags.  In order to retrieve this message, you must set cache=True.  To use Bob in 'KMS mode', use cache=False the first time you retrieve a message.")
+
+            # OK, with the sanity checks behind us, we'll proceed to the WorkOrder assembly.
+            # We'll start by following the treasure map, setting the correctness keys, and attaching cfrags from
+            # WorkOrders that we have already completed in the past.
 
             hrac, map_id = self.construct_hrac_and_map_id(alice_verifying_key, label)
             _unknown_ursulas, _known_ursulas, m = self.follow_treasure_map(map_id=map_id, block=True)
