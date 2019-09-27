@@ -15,7 +15,7 @@ You should have received a copy of the GNU Affero General Public License
 along with nucypher.  If not, see <https://www.gnu.org/licenses/>.
 """
 from constant_sorrow.constants import UNKNOWN_SENDER, NOT_SIGNED
-
+from bytestring_splitter import BytestringKwargifier
 from nucypher.crypto.splitters import key_splitter, capsule_splitter
 
 
@@ -45,7 +45,6 @@ class MessageKit(CryptoKit):
     All the components needed to transmit and verify an encrypted message.
     """
     return_remainder_when_splitting = True
-    splitter = capsule_splitter + key_splitter
 
     def __init__(self,
                  capsule,
@@ -69,6 +68,10 @@ class MessageKit(CryptoKit):
 
         as_bytes += self.ciphertext
         return as_bytes
+
+    @classmethod
+    def splitter(cls, *args, **kwargs):
+        BytestringKwargifier(cls, capsule=capsule_splitter, sender_verifying_key=key_splitter)
 
     @property
     def signature(self):

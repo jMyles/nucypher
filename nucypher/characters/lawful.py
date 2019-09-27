@@ -738,7 +738,6 @@ class Bob(Character):
             # TODO Optimization: Block here (or maybe even later) until map is done being followed (instead of blocking above). #1114
             the_airing_of_grievances = []
 
-
             for work_order in new_work_orders.values():
                 for capsule in work_order.tasks:
                     work_order_is_useful = False
@@ -759,7 +758,7 @@ class Bob(Character):
                 # We don't have enough CFrags yet.  Let's get another one from a WorkOrder.
                 try:
                     self.get_reencrypted_cfrags(work_order, retain_cfrags=retain_cfrags)
-                except NodeSeemsToBeDown:
+                except NodeSeemsToBeDown as e:
                     # TODO: What to do here?  Ursula isn't supposed to be down.
                     self.log.info(
                         f"Ursula ({work_order.ursula}) seems to be down while trying to complete WorkOrder: {work_order}")
