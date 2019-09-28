@@ -306,8 +306,8 @@ def estimate_gas(analyzer: AnalyzeGas = None) -> None:
     #
     # Create policy
     #
-    policy_id_1 = os.urandom(int(Policy.POLICY_ID_LENGTH))
-    policy_id_2 = os.urandom(int(Policy.POLICY_ID_LENGTH))
+    policy_id_1 = os.urandom(int(Policy.ID_LENGTH))
+    policy_id_2 = os.urandom(int(Policy.ID_LENGTH))
     number_of_periods = 10
     value = 10000
     transact_and_log("Creating policy (1 node, 10 periods), 1st",
@@ -326,9 +326,9 @@ def estimate_gas(analyzer: AnalyzeGas = None) -> None:
     #
     # Create policy with more periods
     #
-    policy_id_1 = os.urandom(int(Policy.POLICY_ID_LENGTH))
-    policy_id_2 = os.urandom(int(Policy.POLICY_ID_LENGTH))
-    policy_id_3 = os.urandom(int(Policy.POLICY_ID_LENGTH))
+    policy_id_1 = os.urandom(int(Policy.ID_LENGTH))
+    policy_id_2 = os.urandom(int(Policy.ID_LENGTH))
+    policy_id_3 = os.urandom(int(Policy.ID_LENGTH))
     number_of_periods = 100
     value = 10050
     first_reward = 50
@@ -366,9 +366,9 @@ def estimate_gas(analyzer: AnalyzeGas = None) -> None:
     #
     # Create policy with multiple nodes
     #
-    policy_id_1 = os.urandom(int(Policy.POLICY_ID_LENGTH))
-    policy_id_2 = os.urandom(int(Policy.POLICY_ID_LENGTH))
-    policy_id_3 = os.urandom(int(Policy.POLICY_ID_LENGTH))
+    policy_id_1 = os.urandom(int(Policy.ID_LENGTH))
+    policy_id_2 = os.urandom(int(Policy.ID_LENGTH))
+    policy_id_3 = os.urandom(int(Policy.ID_LENGTH))
     number_of_periods = 100
     value = 30150
     first_reward = 50
