@@ -31,7 +31,7 @@ from umbral.keys import UmbralPublicKey
 from umbral.kfrags import KFrag
 
 import nucypher
-from nucypher.config.storages import ForgetfulNodeStorage
+from nucypher.storage.node import ForgetfulNodeStorage
 from nucypher.crypto.kits import UmbralMessageKit
 from nucypher.crypto.powers import KeyPairBasedPower, PowerUpError
 from nucypher.crypto.signing import InvalidSignature
