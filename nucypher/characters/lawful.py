@@ -720,7 +720,6 @@ class Bob(Character):
                 else:
                     self.log.warn("Found existing complete WorkOrders, but use_precedent_work_orders is set to False.  To use Bob in 'KMS mode', set retain_cfrags=False as well.")
 
-
         # Part II: Getting the cleartexts.
         cleartexts = []
 
