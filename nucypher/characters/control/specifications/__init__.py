@@ -70,31 +70,6 @@ class CharacterSpecification(ABC):
         else:
             return cls._specifications
 
-    @staticmethod
-    def __validate(specification: tuple, data: dict, error_class,
-                   optional_specification: tuple = ()):
-        invalid_fields = set(data.keys()) - set(specification) - set(optional_specification)
-        if invalid_fields:
-            pretty_invalid_fields = ', '.join(invalid_fields)
-            raise error_class(f"Got: {pretty_invalid_fields}")
-
-        missing_fields = set(specification) - set(data.keys())
-        if missing_fields:
-            pretty_missing_fields = ', '.join(missing_fields)
-            raise error_class(f"Got: {pretty_missing_fields}")
-
-        return True
-
-    def validate_request(self, interface_name: str, request: dict) -> bool:
-        input_specification, optional_specification, _ = self.get_specifications(interface_name=interface_name)
-        return self.__validate(specification=input_specification,
-                               optional_specification=optional_specification,
-                               data=request, error_class=self.InvalidInputField)
-
-    def validate_response(self, interface_name: str, response: dict) -> bool:
-        _, _, output_specification = self.get_specifications(interface_name=interface_name)
-        return self.__validate(specification=output_specification, data=response, error_class=self.InvalidInputField)
-
 class AliceSpecification(CharacterSpecification):
 
     _specifications = alice
