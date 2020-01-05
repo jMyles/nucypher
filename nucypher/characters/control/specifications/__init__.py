@@ -25,19 +25,6 @@ class CharacterSpecification(ABC):
     InvalidOutputField = InvalidOutputField
 
     @classmethod
-    def get_specifications(cls, interface_name: str) -> tuple:
-        if cls._specifications is NotImplemented:
-            raise NotImplementedError("Missing specifications for character")
-        try:
-            spec = cls.specifications()[interface_name]
-        except KeyError:
-            raise cls.SpecificationError(f"{cls.__class__.__name__} has no such control interface: '{interface_name}'")
-
-        return SpecificationTuple(**{
-            k: spec.get(k, ())
-            for k in ['input', 'optional', 'output']})
-
-    @classmethod
     def get_serializer(cls, interface_name: str) -> tuple:
         if cls._specifications is NotImplemented:
             raise NotImplementedError("Missing specifications for character")
@@ -51,11 +38,6 @@ class CharacterSpecification(ABC):
     @classmethod
     def get_specifications(cls, interface_name: str) -> tuple:
         spec = cls.get_serializer(interface_name)
-
-        if isinstance(spec, dict):
-            return SpecificationTuple(**{
-                k: spec.get(k, ())
-                for k in ['input', 'optional', 'output']})
 
         return SpecificationTuple(
             [k for k, f in spec.load_fields.items() if f.required],
