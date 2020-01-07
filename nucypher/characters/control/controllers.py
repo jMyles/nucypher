@@ -278,8 +278,7 @@ class JSONRPCController(CharacterControlServer):
             _request_id = message['id']
 
         except KeyError:  # Notification
-            return self.handle_server_notification(notification_request=message)
-
+            raise self.emitter.InvalidRequest
         else:             # RPC
             return self.handle_procedure_call(control_request=message, *args, **kwargs)
 
