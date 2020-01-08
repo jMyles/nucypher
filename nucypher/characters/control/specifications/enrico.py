@@ -3,7 +3,10 @@ from .base import BaseSchema
 
 class EncryptMessage(BaseSchema):
 
-    message = fields.Str(required=True, load_only=True)
+    # input
+    message = fields.Cleartext(required=True, load_only=True)
+
+    # output
     message_kit = fields.MessageKit(dump_only=True)
     signature = fields.Key(dump_only=True) # maybe we need a signature field?
 
