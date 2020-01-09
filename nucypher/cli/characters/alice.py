@@ -38,6 +38,8 @@ from nucypher.config.characters import AliceConfiguration
 from nucypher.config.keyring import NucypherKeyring
 from nucypher.utilities.sandbox.constants import TEMPORARY_DOMAIN
 
+from nucypher.characters.control.specifications.decorators import specify_options
+
 
 option_bob_verifying_key = click.option(
     '--bob-verifying-key', help="Bob's verifying key as a hexadecimal string", type=click.STRING,
