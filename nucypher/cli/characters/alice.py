@@ -38,7 +38,7 @@ from nucypher.config.characters import AliceConfiguration
 from nucypher.config.keyring import NucypherKeyring
 from nucypher.utilities.sandbox.constants import TEMPORARY_DOMAIN
 
-from nucypher.characters.control.specifications.decorators import specify_options
+from nucypher.characters.control.interfaces import AliceInterface
 
 
 option_bob_verifying_key = click.option(
