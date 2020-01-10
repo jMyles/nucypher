@@ -27,7 +27,6 @@ def attach_schema(schema):
     return callable
 
 
-
 class CharacterPublicInterface:
 
     specification = NotImplemented
@@ -55,13 +54,6 @@ class CharacterPublicInterface:
 
 
 class AliceInterface(CharacterPublicInterface):
-
-    specifications = {'create_policy': alice.CreatePolicy(),
-                      'derive_policy_encrypting_key': alice.DerivePolicyEncryptionKey(),
-                      'grant': alice.GrantPolicy(),
-                      'revoke': alice.Revoke(),
-                      'public_keys': alice.PublicKeys(),
-                      'decrypt': alice.Decrypt()}
 
     @attach_schema(alice.CreatePolicy)
     def create_policy(self,
@@ -180,10 +172,6 @@ class AliceInterface(CharacterPublicInterface):
 
 class BobInterface(CharacterPublicInterface):
 
-    specifications = {'join_policy': bob.JoinPolicy(),
-                      'retrieve': bob.Retrieve(),
-                      'public_keys': bob.PublicKeys()}
-
     def join_policy(self, label: bytes, alice_verifying_key: bytes):
         """
         Character control endpoint for joining a policy on the network.
@@ -230,8 +218,6 @@ class BobInterface(CharacterPublicInterface):
 
 
 class EnricoInterface(CharacterPublicInterface):
-
-    specifications = {'encrypt_message': enrico.EncryptMessage()}
 
     def encrypt_message(self, message: str):
         """
