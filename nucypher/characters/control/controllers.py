@@ -34,13 +34,12 @@ class CharacterControllerBase(ABC):
 
         # Control Emitter
         self.emitter = self._emitter_class()
-        self.specifications = interface.specifications
         self.interface = interface
 
     def _perform_action(self, action: str, request: dict) -> dict:
         request = request or {}  # for requests with no input params request can be ''
         method = getattr(self.interface, action)
-        serializer = method._schema
+        serializer = getattr(method, '_schema', json)
         params = serializer.load(request)
 
         response = method(**params)  # < ---- INLET
