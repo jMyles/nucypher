@@ -39,7 +39,7 @@ class CharacterControllerBase(ABC):
     def _perform_action(self, action: str, request: dict) -> dict:
         request = request or {}  # for requests with no input params request can be ''
         method = getattr(self.interface, action)
-        serializer = getattr(method, '_schema', json)
+        serializer = method._schema
         params = serializer.load(request)
 
         response = method(**params)  # < ---- INLET
