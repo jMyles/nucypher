@@ -41,9 +41,6 @@ from nucypher.utilities.sandbox.constants import TEMPORARY_DOMAIN
 from nucypher.characters.control.interfaces import AliceInterface
 
 
-option_bob_verifying_key = click.option(
-    '--bob-verifying-key', help="Bob's verifying key as a hexadecimal string", type=click.STRING,
-    required=True)
 option_pay_with = click.option(
     '--pay-with', help="Run with a specified account", type=EIP55_CHECKSUM_ADDRESS)
 
@@ -336,14 +333,7 @@ def derive_policy_pubkey(general_config, label, character_options, config_file):
 
 
 @alice.command()
-@click.option('--bob-encrypting-key', help="Bob's encrypting key as a hexadecimal string", type=click.STRING,
-              required=True)
-@option_bob_verifying_key
-@option_label(required=True)
-@option_m
-@option_n
-@click.option('--expiration', help="Expiration Datetime of a policy", type=click.STRING)  # TODO: click.DateTime()
-@click.option('--value', help="Total policy value (in Wei)", type=types.WEI)
+@AliceInterface.connect('grant')
 @group_character_options
 @option_config_file
 @group_general_config
@@ -381,8 +371,7 @@ def grant(general_config,
 
 
 @alice.command()
-@option_bob_verifying_key
-@option_label(required=True)
+@AliceInterface.connect('revoke')
 @group_character_options
 @option_config_file
 @group_general_config

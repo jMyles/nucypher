@@ -8,8 +8,6 @@ from nucypher.cli.types import (
     EXISTING_READABLE_FILE,
     NETWORK_PORT,
     )
-from nucypher.network.middleware import RestMiddleware
-from nucypher.utilities.sandbox.middleware import MockRestMiddleware
 
 
 option_checksum_address = click.option(
@@ -178,6 +176,9 @@ def wrap_option(handler, **options):
 
 
 def process_middleware(mock_networking):
+    print ('process_middleware')
+    from nucypher.network.middleware import RestMiddleware
+    from nucypher.utilities.sandbox.middleware import MockRestMiddleware
     if mock_networking:
         # FIXME: is there a way to get an emitter here?
         #self.emitter.message("WARNING: Mock networking is enabled")
