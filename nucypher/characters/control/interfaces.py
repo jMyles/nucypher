@@ -39,10 +39,9 @@ class CharacterPublicInterface:
     def connect(cls, action):
 
         schema = getattr(cls, action)._schema
-
         def callable(func):
             c = func
-            for k, f in schema.load_fields.items():
+            for f in [f for f in schema.load_fields.values() if f.click]:
                 c = f.click(c)
 
             @functools.wraps(func)
