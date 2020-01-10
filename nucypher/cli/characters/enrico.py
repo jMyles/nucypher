@@ -49,7 +49,7 @@ def run(general_config, policy_encrypting_key, dry_run, http_port):
 
 
 @enrico.command()
-@EnricoInterface.connect('encrypt_message')
+@EnricoInterface.connect_cli('encrypt_message')
 @group_general_config
 def encrypt(general_config, policy_encrypting_key, message):
     """

@@ -36,7 +36,7 @@ class CharacterPublicInterface:
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def connect(cls, action):
+    def connect_cli(cls, action):
 
         schema = getattr(cls, action)._schema
         def callable(func):

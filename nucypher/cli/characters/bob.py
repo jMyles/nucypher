@@ -233,7 +233,7 @@ def destroy(general_config, config_options, config_file, force):
 @bob.command(name='public-keys')
 @group_character_options
 @option_config_file
-@BobInterface.connect('public_keys')
+@BobInterface.connect_cli('public_keys')
 @group_general_config
 def public_keys(general_config, character_options, config_file):
     """
@@ -248,7 +248,7 @@ def public_keys(general_config, character_options, config_file):
 @bob.command()
 @group_character_options
 @option_config_file
-@BobInterface.connect('retrieve')
+@BobInterface.connect_cli('retrieve')
 @group_general_config
 def retrieve(general_config, character_options, config_file,
              label, policy_encrypting_key, alice_verifying_key, message_kit):
