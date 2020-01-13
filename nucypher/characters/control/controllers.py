@@ -114,6 +114,7 @@ class CLIController(CharacterControlServer):
         response = self._perform_action(action=method_name, request=request)
         return self.emitter.ipc(response=response, request_id=start.epoch, duration=maya.now() - start)
 
+
 class JSONRPCController(CharacterControlServer):
 
     _emitter_class = JSONRPCStdoutEmitter
@@ -304,5 +305,5 @@ class WebController(CharacterControlServer):
         # Send to WebEmitter
         #
         else:
-            self.log.debug(f"{interface_name} [200 - OK]")
+            self.log.debug(f"{method_name} [200 - OK]")
             return self.emitter.respond(response=response)

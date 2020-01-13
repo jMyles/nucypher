@@ -381,8 +381,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             """
             Character control endpoint for getting Alice's encrypting and signing public keys
             """
-            return controller(interface=controller._internal_controller.public_keys,
-                              control_request=request)
+            return controller(method_name='public_keys', control_request=request)
 
         @alice_flask_control.route("/create_policy", methods=['PUT'])
         def create_policy() -> Response:
@@ -390,8 +389,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             Character control endpoint for creating a policy and making
             arrangements with Ursulas.
             """
-            response = controller(interface=controller._internal_controller.create_policy,
-                                  control_request=request)
+            response = controller(method_name='create_policy', control_request=request)
             return response
 
         @alice_flask_control.route("/decrypt", methods=['POST'])
@@ -399,11 +397,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             """
             Character control endpoint for decryption of Alice's own policy data.
             """
-
-            response = controller(
-                interface=controller._internal_controller.decrypt,
-                control_request=request
-            )
+            response = controller(method_name='decrypt', control_request=request)
             return response
 
         @alice_flask_control.route('/derive_policy_encrypting_key/<label>', methods=['POST'])
@@ -411,9 +405,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             """
             Character control endpoint for deriving a policy encrypting given a unicode label.
             """
-            response = controller(interface=controller._internal_controller.derive_policy_encrypting_key,
-                                  control_request=request,
-                                  label=label)
+            response = controller(method_name='derive_policy_encrypting_key', control_request=request, label=label)
             return response
 
         @alice_flask_control.route("/grant", methods=['PUT'])
@@ -421,7 +413,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             """
             Character control endpoint for policy granting.
             """
-            response = controller(interface=controller._internal_controller.grant, control_request=request)
+            response = controller(method_name='grant', control_request=request)
             return response
 
         @alice_flask_control.route("/revoke", methods=['DELETE'])
@@ -429,8 +421,7 @@ class Alice(Character, BlockchainPolicyAuthor):
             """
             Character control endpoint for policy revocation.
             """
-            response = controller(interface=controller._internal_controller.revoke,
-                                  control_request=request)
+            response = controller(method_name='revoke', control_request=request)
             return response
 
         return controller
@@ -741,8 +732,7 @@ class Bob(Character):
             """
             Character control endpoint for getting Bob's encrypting and signing public keys
             """
-            return controller(interface=controller._internal_controller.public_keys,
-                              control_request=request)
+            return controller(method_name='public_keys', control_request=request)
 
         @bob_control.route('/join_policy', methods=['POST'])
         def join_policy():
@@ -751,7 +741,7 @@ class Bob(Character):
 
             This is an unfinished endpoint. You're probably looking for retrieve.
             """
-            return controller(interface=controller._internal_controller.join_policy, control_request=request)
+            return controller(method_name='join_policy', control_request=request)
 
         @bob_control.route('/retrieve', methods=['POST'])
         def retrieve():
@@ -759,7 +749,7 @@ class Bob(Character):
             Character control endpoint for re-encrypting and decrypting policy
             data.
             """
-            return controller(interface=controller._internal_controller.retrieve, control_request=request)
+            return controller(method_name='retrieve', control_request=request)
 
         return controller
 
