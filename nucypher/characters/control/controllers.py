@@ -73,15 +73,19 @@ class CharacterControlServer(CharacterControllerBase):
 
         self.interface = interface
 
+        def set_method(name):
+
+            def wrapper(request=None):
+                return self.handle_request(name, request=request)
+            setattr(self, name, wrapper)
+
         for method_name, method in inspect.getmembers(
             self.interface,
             predicate=inspect.ismethod
         ):
 
             if hasattr(method, '_schema'):
-                def wrapper(request):
-                    return self.handle_request(method_name, request=request)
-                setattr(self, method.__name__, wrapper)
+                set_method(method_name)
 
         super().__init__(*args, **kwargs)
 
