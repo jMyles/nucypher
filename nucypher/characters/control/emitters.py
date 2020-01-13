@@ -196,6 +196,10 @@ class JSONRPCStdoutEmitter(StdoutEmitter):
 
 class WebEmitter:
 
+    class MethodNotFound(BaseException):
+        """Cannot find interface method to handle request"""
+
+
     _crash_on_error_default = False
     transport_serializer = json.dumps
     _default_sink_callable = Response
