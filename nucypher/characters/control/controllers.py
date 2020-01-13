@@ -108,6 +108,7 @@ class CharacterControlServer(CharacterControllerBase):
     def test_client(self):
         return NotImplemented
 
+
 class CLIController(CharacterControlServer):
 
     _emitter_class = StdoutEmitter

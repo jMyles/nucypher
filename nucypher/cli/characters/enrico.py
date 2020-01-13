@@ -79,5 +79,6 @@ def _setup_emitter(general_config, policy_encrypting_key):
 def _create_enrico(emitter, policy_encrypting_key):
     policy_encrypting_key = UmbralPublicKey.from_bytes(bytes.fromhex(policy_encrypting_key))
     ENRICO = Enrico(policy_encrypting_key=policy_encrypting_key)
+    ENRICO.controller.emitter = emitter
 
     return ENRICO
