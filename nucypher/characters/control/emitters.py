@@ -17,6 +17,9 @@ def null_stream():
 
 class StdoutEmitter:
 
+    class MethodNotFound(BaseException):
+        """Cannot find interface method to handle request"""
+
     transport_serializer = str
     default_color = 'white'
 
