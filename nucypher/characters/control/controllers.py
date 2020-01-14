@@ -154,7 +154,7 @@ class JSONRPCController(CharacterControlServer):
         method_name = control_request['method']
         method_params = control_request.get('params', dict())  # optional
         if method_name not in self._get_interfaces():
-            raise self.emitter.MethodNotFound('No method called {method_name}')
+            raise self.emitter.MethodNotFound(f'No method called {method_name}')
 
         return self.call_interface(method_name=method_name,
                                    request=method_params,
