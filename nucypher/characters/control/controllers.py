@@ -276,7 +276,7 @@ class WebController(CharacterControlServer):
             request_body.update(kwargs)
 
             if method_name not in self._get_interfaces():
-                raise self.emitter.MethodNotFound('No method called {method_name}')
+                raise self.emitter.MethodNotFound(f'No method called {method_name}')
 
             response = self._perform_action(action=method_name, request=request_body)
 
