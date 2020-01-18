@@ -117,6 +117,11 @@ Whitepapers
 
    NuCypher is currently in the *Alpha* development stage and is **not** intended for use in production.
 
+.. toctree::
+   :maxdepth: 1
+   :caption: The NuCypher Cast of Characters
+
+   characters/bob
 
 .. toctree::
    :maxdepth: 1
@@ -129,6 +134,7 @@ Whitepapers
    guides/cli_guide
    guides/character_control_guide
    guides/contribution_guide
+   guides/retrieving_secrets_with_bob
 
 .. toctree::
    :maxdepth: 1
