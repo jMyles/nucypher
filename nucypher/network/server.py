@@ -427,13 +427,14 @@ def _make_rest_app(datastore: Datastore, this_node, serving_domain: str, log: Lo
 
         else:
             headers = {"Content-Type": "text/html", "charset": "utf-8"}
-            previous_states = list(reversed(this_node.known_nodes.states.values()))[:5]
+            previous_states = reversed(this_node.known_nodes.latest_states(5))
             # Mature every known node before rendering.
             for node in this_node.known_nodes:
                 node.mature()
 
             try:
                 content = status_template.render(this_node=this_node,
+                                                 current_state=this_node.known_nodes.current_state,
                                                  known_nodes=this_node.known_nodes,
                                                  previous_states=previous_states,
                                                  domain=serving_domain,

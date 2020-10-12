@@ -117,9 +117,6 @@ def test_vladimir_illegal_interface_key_does_not_propagate(blockchain_ursulas):
     # Indeed, Ursula noticed that something was up.
     vladimir in other_ursula.suspicious_activities_witnessed['vladimirs']
 
-    # She marked him as Invalid...
-    vladimir in other_ursula.known_nodes._marked[vladimir.InvalidNode]
-
     # ...and booted him from known_nodes
     vladimir not in other_ursula.known_nodes
 

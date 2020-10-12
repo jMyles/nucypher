@@ -205,6 +205,7 @@ class Learner:
                  abort_on_learning_error: bool = False,
                  lonely: bool = False,
                  verify_node_bonding: bool = True,
+                 include_self_in_the_state: bool = False,
                  ) -> None:
 
         self.log = Logger("learning-loop")  # type: Logger
@@ -224,7 +225,7 @@ class Learner:
         self._learning_listeners = defaultdict(list)
         self._node_ids_to_learn_about_immediately = set()
 
-        self.__known_nodes = self.tracker_class()
+        self.__known_nodes = self.tracker_class(self if include_self_in_the_state else None)
         self._verify_node_bonding = verify_node_bonding
 
         self.lonely = lonely
@@ -251,6 +252,7 @@ class Learner:
                 self.remember_node(node, eager=True)
             except self.UnresponsiveTeacher:
                 self.unresponsive_startup_nodes.append(node)
+        self.known_nodes.record_fleet_state()
 
         self.teacher_nodes = deque()
         self._current_teacher_node = None  # type: Teacher
@@ -390,7 +392,7 @@ class Learner:
                 # This node is already known.  We can safely return.
                 return False
 
-        self.known_nodes[node.checksum_address] = node
+        self.known_nodes.record_node(node)
 
         if self.save_metadata:
             self.node_storage.store_node_metadata(node=node)
@@ -751,7 +753,7 @@ class Learner:
 
         if not self.done_seeding:
             try:
-                remembered_seednodes = self.load_seednodes(record_fleet_state=False)
+                remembered_seednodes = self.load_seednodes(record_fleet_state=True)
             except Exception as e:
                 # Even if we aren't aborting on learning errors, we want this to crash the process pronto.
                 e.crash_right_now = True
@@ -855,7 +857,7 @@ class Learner:
             current_teacher.update_snapshot(checksum=checksum,
                                             updated=maya.MayaDT(
                                                 int.from_bytes(fleet_state_updated_bytes, byteorder="big")),
-                                            number_of_known_nodes=self.known_nodes.population())
+                                            number_of_known_nodes=self.known_nodes.population)
             return FLEET_STATES_MATCH
 
         # Note: There was previously a version check here, but that required iterating through node bytestrings twice,
@@ -1333,7 +1335,7 @@ class Teacher:
 
     def known_nodes_details(self) -> dict:
         abridged_nodes = {}
-        for checksum_address, node in self.known_nodes._nodes.items():
+        for checksum_address, node in self.known_nodes.items():
             abridged_nodes[checksum_address] = self.node_details(node=node)
         return abridged_nodes
 

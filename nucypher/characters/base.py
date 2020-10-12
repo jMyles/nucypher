@@ -71,6 +71,7 @@ class Character(Learner):
                  provider_uri: str = None,
                  signer: Signer = None,
                  registry: BaseContractRegistry = None,
+                 include_self_in_the_state: bool = False,
                  *args, **kwargs
                  ) -> None:
 
@@ -183,6 +184,7 @@ class Character(Learner):
                              domain=domain,
                              network_middleware=self.network_middleware,
                              node_class=known_node_class,
+                             include_self_in_the_state=include_self_in_the_state,
                              *args, **kwargs)
 
         #
