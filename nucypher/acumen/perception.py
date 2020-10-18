@@ -33,7 +33,19 @@ from .nicknames import Nickname
 from nucypher.crypto.api import keccak_digest
 
 
-class ArchivedFleetState:
+class BaseFleetState:
+
+    def __str__(self):
+        if len(ursula.known_nodes) != 0:
+            # TODO: draw the icon in color, similarly to the web version?
+            return '{checksum} ⇀{nickname}↽ {icon}'.format(icon=self.nickname.icon,
+                                                           nickname=self.nickname,
+                                                           checksum=self.checksum[:7])
+        else:
+            return 'No Known Nodes'
+
+
+class ArchivedFleetState(BaseFleetState):
 
     def __init__(self, checksum, nickname, timestamp, population):
         self.checksum = checksum
@@ -57,7 +69,7 @@ class ArchivedFleetState:
 # - For the purposes of the fleet state, nodes with different metadata are considered different,
 #   even if they have the same checksum address.
 
-class FleetState:
+class FleetState(BaseFleetState):
 
     @classmethod
     def new(cls, this_node=None, nodes=[]):

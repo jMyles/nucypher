@@ -15,7 +15,6 @@ You should have received a copy of the GNU Affero General Public License
 along with nucypher.  If not, see <https://www.gnu.org/licenses/>.
 """
 import maya
-from constant_sorrow.constants import NO_KNOWN_NODES
 
 from nucypher.config.constants import SEEDNODES
 from nucypher.datastore.datastore import RecordNotFound
@@ -23,19 +22,7 @@ from nucypher.datastore.models import Workorder
 
 
 def build_fleet_state_status(ursula) -> str:
-    # Build FleetState status line
-    if ursula.known_nodes.checksum is not NO_KNOWN_NODES:
-        fleet_state_checksum = ursula.known_nodes.checksum[:7]
-        fleet_state_nickname = ursula.known_nodes.nickname
-        fleet_state = '{checksum} ⇀{nickname}↽ {icon}'.format(icon=fleet_state_nickname.icon,
-                                                              nickname=fleet_state_nickname,
-                                                              checksum=fleet_state_checksum)
-    elif ursula.known_nodes.checksum is NO_KNOWN_NODES:
-        fleet_state = 'No Known Nodes'
-    else:
-        fleet_state = 'Unknown'
-
-    return fleet_state
+    return str(ursula.known_nodes.current_state)
 
 
 def paint_node_status(emitter, ursula, start_time):
