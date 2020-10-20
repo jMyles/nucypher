@@ -1050,25 +1050,6 @@ class Teacher:
         payload += ursulas_as_bytes
         return payload
 
-    '''
-    def update_snapshot(self, checksum, updated, number_of_known_nodes):
-        """
-        TODO: We update the simple snapshot here, but of course if we're dealing
-              with an instance that is also a Learner, it has
-              its own notion of its FleetState, so we probably
-              need a reckoning of sorts here to manage that.  In time.  NRN
-
-        :param checksum:
-        :param updated:
-        :param number_of_known_nodes:
-        :return:
-        """
-        self.fleet_state_nickname = Nickname.from_seed(checksum, length=1)
-        self.fleet_state_checksum = checksum
-        self.fleet_state_updated = updated
-        self.fleet_state_population = number_of_known_nodes
-    '''
-
     #
     # Stamp
     #
