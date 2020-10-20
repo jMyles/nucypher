@@ -36,7 +36,7 @@ from nucypher.crypto.api import keccak_digest
 class BaseFleetState:
 
     def __str__(self):
-        if len(ursula.known_nodes) != 0:
+        if len(self) != 0:
             # TODO: draw the icon in color, similarly to the web version?
             return '{checksum} ⇀{nickname}↽ {icon}'.format(icon=self.nickname.icon,
                                                            nickname=self.nickname,
