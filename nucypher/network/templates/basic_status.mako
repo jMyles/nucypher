@@ -191,7 +191,7 @@ ${fleet_state_icon(state.checksum, state.nickname, state.population)}
         </tr>
     </table>
 
-    <h3>${len(known_nodes)} ${"known node" if len(known_nodes) == 1 else "known nodes"}:</h3>
+    <h3>${len(this_node.known_nodes)} ${"known node" if len(this_node.known_nodes) == 1 else "known nodes"}:</h3>
 
     <table class="known-nodes">
         <thead>
@@ -201,14 +201,18 @@ ${fleet_state_icon(state.checksum, state.nickname, state.population)}
             <td>Fleet State</td>
         </thead>
         <tbody>
-        %for node in known_nodes:
+        %for node in this_node.known_nodes:
             <tr>
                 <td>${node_info(node)}</td>
-                <td>${ node.timestamp }</td>
-                <td>${ node.last_seen }</td>
-                <td>${fleet_state_icon(node.fleet_state_checksum,
-                                       node.fleet_state_nickname,
-                                       node.fleet_state_population)}</td>
+                <td>${node.timestamp}</td>
+                <td>${node.last_seen}</td>
+                <td>
+                %if node.checksum_address in this_node.known_nodes.remote_states:
+                ${fleet_state_icon_from_state(this_node.known_nodes.remote_states[node.checksum_address])}
+                %else:
+                UNKNOWN
+                %endif
+                </td>
             </tr>
         %endfor
         </tbody>

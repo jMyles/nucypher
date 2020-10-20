@@ -166,10 +166,21 @@ class FleetState(BaseFleetState):
     def __len__(self):
         return len(self._nodes)
 
+    # TODO: we only send it along with `FLEET_STATES_MATCH`, so it is essentially useless.
+    # But it's hard to change now because older nodes will be looking for it.
     def snapshot(self):
         checksum_bytes = binascii.unhexlify(self.checksum)
         timestamp_bytes = self.timestamp.epoch.to_bytes(4, byteorder="big")
         return checksum_bytes + timestamp_bytes
+
+    snapshot_splitter = BytestringSplitter(32, 4)
+
+    @staticmethod
+    def unpack_snapshot(data):
+        checksum_bytes, timestamp_bytes, remainder = FleetState.snapshot_splitter(data, return_remainder=True)
+        checksum = checksum_bytes.hex()
+        timestamp = maya.MayaDT(int.from_bytes(timestamp_bytes, byteorder="big"))
+        return checksum, timestamp, remainder
 
     def shuffled(self):
         nodes_we_know_about = list(self._nodes.values())
@@ -209,13 +220,13 @@ class FleetSensor:
     If `this_node` is provided, it will be included in the state checksum
     (but not returned during iteration/lookups).
     """
-    snapshot_splitter = BytestringSplitter(32, 4)
     log = Logger("Learning")
 
     def __init__(self, this_node=None):
 
         self._current_state = FleetState.new(this_node)
         self._archived_states = [self._current_state.archived()]
+        self.remote_states = {}
 
         # temporary accumulator for new nodes to avoid updating the fleet state every time
         self._new_nodes = {}
@@ -296,14 +307,19 @@ class FleetSensor:
         return self._current_state.values()
 
     def latest_states(self, quantity):
-        # the last archived state is the current state
-        return self._archived_states[-min(len(self._archived_states) - 1, quantity):-1]
+        # The last archived state is the current state.
+        # This also means that this least has length of at least 1.
+        return self._archived_states[-min(len(self._archived_states) - 1, quantity) - 1:-1]
 
     def addresses(self):
         return self._current_state.addresses()
 
     def snapshot(self):
         return self._current_state.snapshot()
+
+    @staticmethod
+    def unpack_snapshot(data):
+        return FleetState.unpack_snapshot(data)
 
     def record_fleet_state(self):
         new_state = self._current_state.with_updated_nodes(self._new_nodes, self._marked)
@@ -332,3 +348,9 @@ class FleetSensor:
     def mark_as(self, label: Exception, node: "Teacher"):
         # TODO: for now we're not using `label` in any way, so we're just ignoring it
         self._marked.add(node.checksum_address)
+
+    def record_remote_fleet_state(self, checksum_address, state_checksum, timestamp, population):
+        # TODO: really we can just create the timestamp here
+
+        nickname = Nickname.from_seed(state_checksum, length=1) # TODO: create in a single place
+        self.remote_states[checksum_address] = ArchivedFleetState(state_checksum, nickname, timestamp, population)

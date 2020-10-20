@@ -171,7 +171,7 @@ def _make_rest_app(datastore: Datastore, this_node, serving_domain: str, log: Lo
             # TODO: Is this every something we don't want to do?
             this_node.start_learning_loop()
 
-        if this_node.known_nodes.checksum is NO_KNOWN_NODES:
+        if len(this_node.known_nodes) == 0:
             return Response(b"", headers=headers, status=204)
 
         known_nodes_bytestring = this_node.bytestring_of_known_nodes()
@@ -434,8 +434,6 @@ def _make_rest_app(datastore: Datastore, this_node, serving_domain: str, log: Lo
 
             try:
                 content = status_template.render(this_node=this_node,
-                                                 current_state=this_node.known_nodes.current_state,
-                                                 known_nodes=this_node.known_nodes,
                                                  previous_states=previous_states,
                                                  domain=serving_domain,
                                                  version=nucypher.__version__,

@@ -170,7 +170,6 @@ class Learner:
     tracker_class = FleetSensor
 
     invalid_metadata_message = "{} has invalid metadata.  The node's stake may have ended, or it is transitioning to a new interface. Ignoring."
-    fleet_state_population = None
 
     _DEBUG_MODE = False
 
@@ -765,7 +764,7 @@ class Learner:
 
         current_teacher = self.current_teacher_node()  # Will raise if there's no available teacher.
 
-        if Teacher in self.__class__.__bases__:
+        if Teacher in self.__class__.__bases__: # TODO: why not `isinstance`?
             announce_nodes = [self]
         else:
             announce_nodes = None
@@ -846,18 +845,18 @@ class Learner:
                 f"Invalid signature ({signature}) received from teacher {current_teacher} for payload {node_payload}")
 
         # End edge case handling.
-        payload = FleetSensor.snapshot_splitter(node_payload, return_remainder=True)
-        fleet_state_checksum_bytes, fleet_state_updated_bytes, node_payload = payload
+
+        fleet_state_checksum, fleet_state_updated, node_payload = FleetSensor.unpack_snapshot(node_payload)
 
         current_teacher.last_seen = maya.now()
-        # TODO: This is weird - let's get a stranger FleetState going.  NRN
-        checksum = fleet_state_checksum_bytes.hex()
 
         if constant_or_bytes(node_payload) is FLEET_STATES_MATCH:
-            current_teacher.update_snapshot(checksum=checksum,
-                                            updated=maya.MayaDT(
-                                                int.from_bytes(fleet_state_updated_bytes, byteorder="big")),
-                                            number_of_known_nodes=self.known_nodes.population)
+            self.known_nodes.record_remote_fleet_state(
+                current_teacher.checksum_address,
+                fleet_state_checksum,
+                fleet_state_updated,
+                self.known_nodes.population)
+
             return FLEET_STATES_MATCH
 
         # Note: There was previously a version check here, but that required iterating through node bytestrings twice,
@@ -912,9 +911,11 @@ class Learner:
                 self.log.warn(message)
 
         # Is cycling happening in the right order?
-        current_teacher.update_snapshot(checksum=checksum,
-                                        updated=maya.MayaDT(int.from_bytes(fleet_state_updated_bytes, byteorder="big")),
-                                        number_of_known_nodes=len(sprouts))
+        self.known_nodes.record_remote_fleet_state(
+            current_teacher.checksum_address,
+            fleet_state_checksum,
+            fleet_state_updated,
+            len(sprouts))
 
         ###################
 
@@ -949,12 +950,7 @@ class Teacher:
         #
 
         self.serving_domain = domain
-        self.fleet_state_checksum = None
-        self.fleet_state_updated = None
         self.last_seen = NEVER_SEEN("No Connection to Node")
-
-        self.fleet_state_population = UNKNOWN_FLEET_STATE
-        self.fleet_state_nickname = UNKNOWN_FLEET_STATE
 
         #
         # Identity
@@ -1054,6 +1050,7 @@ class Teacher:
         payload += ursulas_as_bytes
         return payload
 
+    '''
     def update_snapshot(self, checksum, updated, number_of_known_nodes):
         """
         TODO: We update the simple snapshot here, but of course if we're dealing
@@ -1070,6 +1067,7 @@ class Teacher:
         self.fleet_state_checksum = checksum
         self.fleet_state_updated = updated
         self.fleet_state_population = number_of_known_nodes
+    '''
 
     #
     # Stamp
@@ -1333,14 +1331,8 @@ class Teacher:
             address_first6=self.checksum_address[2:8]
         )
 
-    def known_nodes_details(self) -> dict:
-        abridged_nodes = {}
-        for checksum_address, node in self.known_nodes.items():
-            abridged_nodes[checksum_address] = self.node_details(node=node)
-        return abridged_nodes
-
     @staticmethod
-    def node_details(node):
+    def _node_details(node):
         """Stranger-Safe Details"""
         node.mature()
 
@@ -1349,12 +1341,6 @@ class Teacher:
         except AttributeError:
             last_seen = str(node.last_seen)  # In case it's the constant NEVER_SEEN
 
-        fleet_icon = node.fleet_state_nickname
-        if fleet_icon is UNKNOWN_FLEET_STATE:
-            fleet_icon = "?"  # TODO  NRN, MN
-        else:
-            fleet_icon = fleet_icon.icon
-
         payload = {"icon_details": node.nickname.payload(),
                    "rest_url": node.rest_url(),
                    "nickname": str(node.nickname),
@@ -1362,17 +1348,33 @@ class Teacher:
                    "staker_address": node.checksum_address,
                    "timestamp": node.timestamp.iso8601(),
                    "last_seen": last_seen,
-                   "fleet_state": node.fleet_state_checksum or 'unknown',
-                   "fleet_state_icon": fleet_icon,
                    "domain": node.serving_domain,
                    'version': nucypher.__version__}
         return payload
 
+    def _known_nodes_details(self) -> dict:
+        abridged_nodes = {}
+        for checksum_address, node in self.known_nodes.items():
+            abridged_nodes[checksum_address] = self._node_details(node=node)
+            if checksum_address in self.known_nodes.remote_states:
+                remote_state = self.known_nodes.remote_states[checksum_address]
+                fleet_state = remote_state.checksum
+                fleet_state_icon = remote_state.nickname.icon
+            else:
+                fleet_state = 'unknown'
+                fleet_state_icon = 'unknown'
+
+            abridged_nodes[checksum_address].update({
+               "fleet_state": fleet_state,
+               "fleet_state_icon": fleet_state_icon,
+                })
+        return abridged_nodes
+
     def abridged_node_details(self) -> dict:
         """Self-Reporting"""
-        payload = self.node_details(node=self)
+        payload = self._node_details(node=self)
         states = self.known_nodes.abridged_states_dict()
-        known = self.known_nodes_details()
+        known = self._known_nodes_details()
         payload.update({'states': states, 'known_nodes': known})
         if not self.federated_only:
             payload.update({
