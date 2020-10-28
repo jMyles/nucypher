@@ -322,6 +322,7 @@ class FleetSensor:
         return FleetState.unpack_snapshot(data)
 
     def record_fleet_state(self):
+        # a = b"".join(n.canonical_public_address[0:3] for n in self._nodes.values())
         new_state = self._current_state.with_updated_nodes(self._new_nodes, self._marked)
         self._new_nodes = {}
         self._marked = set()

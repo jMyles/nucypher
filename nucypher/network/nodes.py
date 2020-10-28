@@ -103,6 +103,10 @@ class NodeSprout(PartiallyKwargifiedBytes):
         return self.processed_objects['verifying_key'][0]
 
     @property
+    def canonical_public_address(self):
+        return self.public_address
+
+    @property
     def checksum_address(self):
         if not self._checksum_address:
             self._checksum_address = to_checksum_address(self.public_address)
@@ -294,6 +298,9 @@ class Learner:
 
         discovered = []
 
+        nodes_restored_from_storage = self.read_nodes_from_storage() if read_storage else []
+        discovered.extend(nodes_restored_from_storage)
+
         if self.learning_domain:
             canonical_sage_uris = self.network_middleware.TEACHER_NODES.get(self.learning_domain, ())
 
@@ -311,7 +318,8 @@ class Learner:
                         continue
                     else:
                         new_node = self.remember_node(maybe_sage_node, record_fleet_state=False)
-                        discovered.append(new_node)
+                        if new_node:  
+                            discovered.append(new_node)
 
         for seednode_metadata in self._seed_nodes:
 
@@ -336,9 +344,6 @@ class Learner:
             self.log.info("Finished learning about all seednodes.")
 
         self.done_seeding = True
-
-        nodes_restored_from_storage = self.read_nodes_from_storage() if read_storage else []
-        discovered.extend(nodes_restored_from_storage)
 
         if discovered and record_fleet_state:
             self.known_nodes.record_fleet_state()
@@ -883,7 +888,7 @@ class Learner:
                 self.log.info(f"Verification Failed - "
                               f"Cannot establish connection to {sprout}.")
 
-            # TODO: This whole section is weird; sprouts down have any of these things.
+            # TODO: This whole section is weird; sprouts don't have any of these things.
             except sprout.StampNotSigned:
                 self.log.warn(f'Verification Failed - '
                               f'{sprout} stamp is unsigned.')

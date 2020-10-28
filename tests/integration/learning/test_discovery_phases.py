@@ -55,12 +55,13 @@ like libp2p, depending on the course of development of those sorts of tools.  Th
 in particular is useful when wanting to learn about a small number (~500) of nodes among a much larger (25,000+) swarm.
 This toolchain is not built for that scenario at this time, although it is not a stated nongoal. 
 
-After this, our "Learning Loop" does four other things in sequence which are not part of the offering of node discovery tooling alone:
+After this, our "Learning Loop" does five other things in sequence which are not part of the offering of node discovery tooling alone:
 
-* Instantiation of an actual Node object (currently, an Ursula object) from node metadata.  TODO
-* Validation of the node's metadata (non-interactive; shows that the Node's public material is indeed signed by the wallet holder of its Staker).
+* Instantiation of a "sprout" representaiton of the node - a NodeSprout.  This is a wrapper around a dict of the Node's ordinary metadata that allows it to be used programatically before being engaged with network activity.
+* Maturation of the sprout into an actual Node object (currently, an Ursula object) using the mature() logic of the sprout.
+* Validation of the node's metadata (non-interactive; shows that the Node's public material is indeed signed using the TransactingPower of the Worker).
 * Verification of the Node itself (interactive; shows that the REST server operating at the Node's interface matches the node's metadata).
-* Verification of the Stake (reads the blockchain; shows that the Node is sponsored by a Staker with sufficient Stake to support a Policy).
+* Verification of the Stake (reads the blockchain; shows that the Node Worker is sponsored by (ie, bonded to) a Staker with sufficient Stake to support a Policy).
 
 These tests show that each phase of this process is done correctly, and in some cases, with attention to specific
 performance bottlenecks.
